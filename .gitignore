@@ -39,3 +39,8 @@ next-env.d.ts
 # local env files
 .env*.local
 .env
+
+# Google service account credentials
+*-*.json
+!package*.json
+!tsconfig.json
