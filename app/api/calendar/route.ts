@@ -12,8 +12,8 @@ export async function GET(request: Request) {
     const configFile = readFileSync(configPath, 'utf8');
     const config = JSON.parse(configFile);
 
-    // Leer datos del calendario
-    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Q');
+    // Leer datos del calendario (ahora con más columnas)
+    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z');
     const rows = calendarData.slice(1);
 
     // Procesar datos
@@ -24,17 +24,26 @@ export async function GET(request: Request) {
       startTime: row[3] || '',
       endTime: row[4] || '',
       type: row[5] || '',
-      propertyId: row[6] || '',
-      propertyName: row[7] || '',
-      client: row[8] || '',
-      resource1Id: row[9] || '',
-      resource1Name: row[10] || '',
-      resource2Id: row[11] || '',
-      resource2Name: row[12] || '',
-      coordinatorId: row[13] || '',
-      hoursWorked: row[14] || '',
-      status: row[15] || '',
-      notes: row[16] || '',
+      cleaningType: row[6] || '', // Tipo di Pulizia: "Profonda" o "Repasso"
+      propertyId: row[7] || '',
+      propertyName: row[8] || '',
+      client: row[9] || '',
+      resource1Id: row[10] || '',
+      resource1Name: row[11] || '',
+      resource2Id: row[12] || '',
+      resource2Name: row[13] || '',
+      resource3Id: row[14] || '',
+      resource3Name: row[15] || '',
+      resource4Id: row[16] || '',
+      resource4Name: row[17] || '',
+      resource5Id: row[18] || '',
+      resource5Name: row[19] || '',
+      resource6Id: row[20] || '',
+      resource6Name: row[21] || '',
+      coordinatorId: row[22] || '',
+      hoursWorked: row[23] || '',
+      status: row[24] || '',
+      notes: row[25] || '',
     }));
 
     // Si se especifica una semana, filtrar

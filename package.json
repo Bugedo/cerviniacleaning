@@ -14,12 +14,20 @@
     "list-folder": "tsx scripts/list-folder-files.ts",
     "check-folder": "tsx scripts/check-folder-access.ts",
     "migrate-data": "tsx scripts/migrate-data.ts",
+    "migrate-full-data": "tsx scripts/migrate-full-data.ts",
     "check-sheets": "tsx scripts/check-sheets-status.ts",
     "setup-sheets": "tsx scripts/setup-all-sheets.ts",
     "inspect-clients": "tsx scripts/inspect-clients-sheet.ts",
     "cleanup-sheets": "tsx scripts/cleanup-sheets.ts",
     "create-employees": "tsx scripts/create-employees.ts",
-    "update-calendar": "tsx scripts/update-calendar-structure.ts"
+    "update-calendar": "tsx scripts/update-calendar-structure.ts",
+    "add-lika": "tsx scripts/add-client-lika.ts",
+    "update-guffo": "tsx scripts/update-property-guffo.ts",
+    "update-snowstorm": "tsx scripts/update-property-snowstorm.ts",
+    "update-monte-rosa": "tsx scripts/update-property-monte-rosa.ts",
+    "update-montblanc-breithron": "tsx scripts/update-properties-montblanc-breithron.ts",
+    "add-comments": "tsx scripts/add-comments-field.ts",
+    "add-comment": "tsx scripts/add-comment.ts"
   },
   "repository": {
     "type": "git",

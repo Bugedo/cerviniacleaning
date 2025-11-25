@@ -9,6 +9,7 @@ interface Job {
   startTime: string;
   endTime: string;
   type: string;
+  cleaningType: string; // "Profonda" o "Repasso"
   propertyId: string;
   propertyName: string;
   client: string;
@@ -16,6 +17,14 @@ interface Job {
   resource1Name: string;
   resource2Id: string;
   resource2Name: string;
+  resource3Id: string;
+  resource3Name: string;
+  resource4Id: string;
+  resource4Name: string;
+  resource5Id: string;
+  resource5Name: string;
+  resource6Id: string;
+  resource6Name: string;
   coordinatorId: string;
   hoursWorked: string;
   status: string;
@@ -131,16 +140,9 @@ export default function CalendarTab() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="grid grid-cols-7 border-b">
           {weekDays.map((day, index) => (
-            <div
-              key={index}
-              className="p-3 text-center border-r last:border-r-0 bg-gray-50"
-            >
-              <div className="text-sm font-medium text-gray-600">
-                {getDayName(day)}
-              </div>
-              <div className="text-lg font-semibold text-gray-900">
-                {day.getDate()}
-              </div>
+            <div key={index} className="p-3 text-center border-r last:border-r-0 bg-gray-50">
+              <div className="text-sm font-medium text-gray-600">{getDayName(day)}</div>
+              <div className="text-lg font-semibold text-gray-900">{day.getDate()}</div>
             </div>
           ))}
         </div>
@@ -149,14 +151,9 @@ export default function CalendarTab() {
           {weekDays.map((day, dayIndex) => {
             const dayJobs = getJobsForDay(day);
             return (
-              <div
-                key={dayIndex}
-                className="p-2 border-r last:border-r-0 border-b min-h-[100px]"
-              >
+              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[100px]">
                 {dayJobs.length === 0 ? (
-                  <div className="text-sm text-gray-400 text-center mt-2">
-                    Nessun lavoro
-                  </div>
+                  <div className="text-sm text-gray-400 text-center mt-2">Nessun lavoro</div>
                 ) : (
                   <div className="space-y-2">
                     {dayJobs.map((job) => (
@@ -169,8 +166,15 @@ export default function CalendarTab() {
                         }`}
                       >
                         <div className="font-semibold mb-1">
-                          {job.type === 'Supervisione' ? '👁️ Supervisione' : job.propertyName || 'Lavoro'}
+                          {job.type === 'Supervisione'
+                            ? '👁️ Supervisione'
+                            : job.propertyName || 'Lavoro'}
                         </div>
+                        {job.cleaningType && (
+                          <div className="text-xs font-medium text-gray-700 mb-1">
+                            {job.cleaningType === 'Profonda' ? '🧹 Profonda' : '✨ Repasso'}
+                          </div>
+                        )}
                         {job.startTime && (
                           <div className="text-gray-600">
                             {formatTime(job.startTime)}
@@ -179,14 +183,21 @@ export default function CalendarTab() {
                         )}
                         {job.resource1Name && (
                           <div className="text-gray-600 mt-1">
-                            👤 {job.resource1Name}
-                            {job.resource2Name && `, ${job.resource2Name}`}
+                            👤{' '}
+                            {[
+                              job.resource1Name,
+                              job.resource2Name,
+                              job.resource3Name,
+                              job.resource4Name,
+                              job.resource5Name,
+                              job.resource6Name,
+                            ]
+                              .filter(Boolean)
+                              .join(', ')}
                           </div>
                         )}
                         {job.hoursWorked && (
-                          <div className="text-gray-600 mt-1">
-                            ⏱️ {job.hoursWorked}h
-                          </div>
+                          <div className="text-gray-600 mt-1">⏱️ {job.hoursWorked}h</div>
                         )}
                       </div>
                     ))}

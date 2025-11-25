@@ -50,6 +50,8 @@ export async function GET() {
       singleBeds: string;
       bedType: string;
       bathrooms: string;
+      referenceCode: string;
+      comments: string;
     }
 
     let clients: Client[] = [];
@@ -59,7 +61,7 @@ export async function GET() {
       // Usar Google Sheets
       const clientsSheetId = config.sheets.clients;
       const clientsData = await getSpreadsheetData(clientsSheetId, 'Clienti!A:B');
-      const propertiesData = await getSpreadsheetData(clientsSheetId, 'Proprietà!A:Y');
+      const propertiesData = await getSpreadsheetData(clientsSheetId, 'Proprietà!A:AA'); // Incluye Codice Riferimento y Commenti
 
       const clientsRows = clientsData.slice(1);
       const propertiesRows = propertiesData.slice(1);
@@ -94,6 +96,8 @@ export async function GET() {
         singleBeds: row[21] || '',
         bedType: row[22] || '',
         bathrooms: row[23] || '',
+        referenceCode: row[24] || '', // Campo Codice Riferimento
+        comments: row[25] || '', // Campo Commenti
       }));
     } else {
       // Leer directamente del Excel (solo como fallback si no hay Google Sheets)
@@ -178,6 +182,8 @@ export async function GET() {
           singleBeds: lettiSingoli.toString(),
           bedType: lettiIngleseItaliana,
           bathrooms: bagni.toString(),
+          referenceCode: '', // Campo Codice Riferimento (se extrae del nombre de la hoja)
+          comments: '', // Campo Commenti inicialmente vacío
         });
 
         propertyIdCounter++;

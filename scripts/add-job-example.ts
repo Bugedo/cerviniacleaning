@@ -28,21 +28,30 @@ async function addJobExample() {
       '09:00', // Ora Inizio
       '12:00', // Ora Fine
       'Lavoro', // Tipo: "Lavoro" o "Supervisione"
+      'Profonda', // Tipo di Pulizia: "Profonda" o "Repasso" (solo para Lavoro)
       '1', // ID Proprietà
       'Flora Alpina', // Nome Proprietà
       'Agenzia Engel & Volkers', // Cliente
       '2', // ID Risorsa 1
       'Empleado 2', // Nome Risorsa 1
-      '3', // ID Risorsa 2 (opcional, dejar vacío si solo hay 1)
+      '3', // ID Risorsa 2
       'Empleado 3', // Nome Risorsa 2
+      '4', // ID Risorsa 3 (opcional)
+      'Empleado 4', // Nome Risorsa 3
+      '5', // ID Risorsa 4 (opcional)
+      'Empleado 5', // Nome Risorsa 4
+      '6', // ID Risorsa 5 (opcional)
+      'Empleado 6', // Nome Risorsa 5
+      '', // ID Risorsa 6 (opcional)
+      '', // Nome Risorsa 6
       '', // ID Coordinatore (solo para tipo "Supervisione")
       '3.0', // Ore Lavorate (calcular: diferencia entre inicio y fin)
       'Pianificato', // Stato: "Pianificato", "In Corso", "Completato"
       'Nota opzionale', // Note
     ];
 
-    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:Q', [newJob]);
-    console.log('✅ Trabajo agregado:', newJob[7]); // Nome Proprietà
+    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z', [newJob]);
+    console.log('✅ Trabajo agregado:', newJob[8]); // Nome Proprietà
 
     // Ejemplo 2: Agregar horas de supervisión del coordinador
     const supervisionDate = '2024-01-15';
@@ -56,6 +65,7 @@ async function addJobExample() {
       '08:00',
       '18:00',
       'Supervisione', // Tipo: Supervisione
+      '', // Tipo di Pulizia (vacío para supervisión)
       '', // No hay propiedad para supervisión
       'Supervisione giornaliera', // Descripción
       '', // No hay cliente
@@ -63,13 +73,21 @@ async function addJobExample() {
       '',
       '', // No hay Risorsa 2
       '',
+      '', // No hay Risorsa 3
+      '',
+      '', // No hay Risorsa 4
+      '',
+      '', // No hay Risorsa 5
+      '',
+      '', // No hay Risorsa 6
+      '',
       '1', // ID Coordinatore (tú)
       '10.0', // Ore Lavorate
       'Completato',
       'Supervisione di tutti i lavori del giorno',
     ];
 
-    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:Q', [supervision]);
+    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z', [supervision]);
     console.log('✅ Horas de supervisión agregadas');
 
     console.log('\n📝 Estructura de un trabajo:');
@@ -78,8 +96,9 @@ async function addJobExample() {
     console.log('   - Giorno: Nombre del día');
     console.log('   - Ora Inizio/Fine: HH:MM');
     console.log('   - Tipo: "Lavoro" o "Supervisione"');
+    console.log('   - Tipo di Pulizia: "Profonda" o "Repasso" (solo para Lavoro)');
     console.log('   - ID Proprietà: ID de la propiedad (vacío para supervisión)');
-    console.log('   - ID Risorsa 1/2: IDs de empleados (vacío para supervisión)');
+    console.log('   - ID Risorsa 1-6: IDs de empleados (hasta 6 empleados)');
     console.log('   - ID Coordinatore: Solo para tipo "Supervisione"');
     console.log('   - Ore Lavorate: Horas totales');
     console.log('   - Stato: "Pianificato", "In Corso", "Completato"');
