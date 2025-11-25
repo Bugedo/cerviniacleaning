@@ -9,7 +9,7 @@ interface Job {
   startTime: string;
   endTime: string;
   type: string;
-  cleaningType: string; // "Profonda" o "Repasso"
+  cleaningType: string;
   propertyId: string;
   propertyName: string;
   client: string;
@@ -35,11 +35,14 @@ export default function CalendarTab() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [editingTime, setEditingTime] = useState<{ jobId: string; field: 'startTime' | 'endTime' } | null>(null);
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
 
   const getWeekStart = (date: Date): string => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lunes
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(d.setDate(diff));
     return monday.toISOString().split('T')[0];
   };
@@ -95,6 +98,40 @@ export default function CalendarTab() {
     const newWeek = new Date(currentWeek);
     newWeek.setDate(newWeek.getDate() + direction * 7);
     setCurrentWeek(newWeek);
+  };
+
+  const handleTimeChange = (jobId: string, field: 'startTime' | 'endTime', value: string) => {
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId ? { ...job, [field]: value } : job
+      )
+    );
+  };
+
+  const handleTimeBlur = async (jobId: string, field: 'startTime' | 'endTime', value: string) => {
+    setSaving((prev) => ({ ...prev, [`${jobId}-${field}`]: true }));
+    
+    try {
+      const response = await fetch(`/api/calendar/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al guardar');
+      }
+    } catch (error) {
+      console.error('Error saving time:', error);
+      alert('Errore nel salvataggio. Riprova.');
+      // Recargar para revertir cambios
+      fetchJobs();
+    } finally {
+      setSaving((prev) => ({ ...prev, [`${jobId}-${field}`]: false }));
+      setEditingTime(null);
+    }
   };
 
   const weekStart = getWeekStart(currentWeek);
@@ -156,51 +193,137 @@ export default function CalendarTab() {
                   <div className="text-sm text-gray-400 text-center mt-2">Nessun lavoro</div>
                 ) : (
                   <div className="space-y-2">
-                    {dayJobs.map((job) => (
-                      <div
-                        key={job.id}
-                        className={`p-2 rounded text-xs ${
-                          job.type === 'Supervisione'
-                            ? 'bg-blue-100 border border-blue-300'
-                            : 'bg-green-100 border border-green-300'
-                        }`}
-                      >
-                        <div className="font-semibold mb-1">
-                          {job.type === 'Supervisione'
-                            ? '👁️ Supervisione'
-                            : job.propertyName || 'Lavoro'}
+                    {dayJobs.map((job) => {
+                      const isExpanded = expandedJob === job.id;
+                      const isEditingStart = editingTime?.jobId === job.id && editingTime.field === 'startTime';
+                      const isEditingEnd = editingTime?.jobId === job.id && editingTime.field === 'endTime';
+                      const isSavingStart = saving[`${job.id}-startTime`];
+                      const isSavingEnd = saving[`${job.id}-endTime`];
+
+                      return (
+                        <div
+                          key={job.id}
+                          className={`p-2 rounded text-xs ${
+                            job.type === 'Supervisione'
+                              ? 'bg-blue-100 border border-blue-300'
+                              : 'bg-green-100 border border-green-300'
+                          }`}
+                        >
+                          {/* Vista compacta: Solo propiedad, tipo de limpieza y horario */}
+                          <div className="font-semibold mb-1">
+                            {job.type === 'Supervisione'
+                              ? '👁️ Supervisione'
+                              : job.propertyName || 'Lavoro'}
+                          </div>
+                          
+                          {job.cleaningType && (
+                            <div className="text-xs font-medium text-gray-700 mb-1">
+                              {job.cleaningType === 'Profonda' ? '🧹 Profonda' : '✨ Repasso'}
+                            </div>
+                          )}
+
+                          {/* Horario editable */}
+                          <div className="text-gray-600 mb-1">
+                            {isEditingStart ? (
+                              <input
+                                type="time"
+                                value={formatTime(job.startTime)}
+                                onChange={(e) => handleTimeChange(job.id, 'startTime', e.target.value)}
+                                onBlur={(e) => handleTimeBlur(job.id, 'startTime', e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleTimeBlur(job.id, 'startTime', job.startTime);
+                                  }
+                                }}
+                                className="w-16 px-1 py-0.5 text-xs border border-gray-300 rounded"
+                                autoFocus
+                              />
+                            ) : (
+                              <span
+                                onClick={() => setEditingTime({ jobId: job.id, field: 'startTime' })}
+                                className="cursor-pointer hover:bg-gray-200 px-1 rounded"
+                                title="Clicca per modificare"
+                              >
+                                {formatTime(job.startTime)}
+                                {isSavingStart && ' ...'}
+                              </span>
+                            )}
+                            {job.endTime && (
+                              <>
+                                {' - '}
+                                {isEditingEnd ? (
+                                  <input
+                                    type="time"
+                                    value={formatTime(job.endTime)}
+                                    onChange={(e) => handleTimeChange(job.id, 'endTime', e.target.value)}
+                                    onBlur={(e) => handleTimeBlur(job.id, 'endTime', e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleTimeBlur(job.id, 'endTime', job.endTime);
+                                      }
+                                    }}
+                                    className="w-16 px-1 py-0.5 text-xs border border-gray-300 rounded"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span
+                                    onClick={() => setEditingTime({ jobId: job.id, field: 'endTime' })}
+                                    className="cursor-pointer hover:bg-gray-200 px-1 rounded"
+                                    title="Clicca per modificare"
+                                  >
+                                    {formatTime(job.endTime)}
+                                    {isSavingEnd && ' ...'}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* Botón para más info */}
+                          <button
+                            onClick={() => setExpandedJob(isExpanded ? null : job.id)}
+                            className="text-xs text-blue-600 hover:text-blue-800 mt-1 underline"
+                          >
+                            {isExpanded ? 'Meno info' : 'Più info'}
+                          </button>
+
+                          {/* Información expandida: Empleados y horas */}
+                          {isExpanded && (
+                            <div className="mt-2 pt-2 border-t border-gray-300">
+                              {[
+                                job.resource1Name,
+                                job.resource2Name,
+                                job.resource3Name,
+                                job.resource4Name,
+                                job.resource5Name,
+                                job.resource6Name,
+                              ]
+                                .filter(Boolean)
+                                .length > 0 && (
+                                <div className="text-gray-600 mb-1">
+                                  <span className="font-medium">Dipendenti:</span>{' '}
+                                  {[
+                                    job.resource1Name,
+                                    job.resource2Name,
+                                    job.resource3Name,
+                                    job.resource4Name,
+                                    job.resource5Name,
+                                    job.resource6Name,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(', ')}
+                                </div>
+                              )}
+                              {job.hoursWorked && (
+                                <div className="text-gray-600">
+                                  <span className="font-medium">Tempo:</span> {job.hoursWorked}h
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {job.cleaningType && (
-                          <div className="text-xs font-medium text-gray-700 mb-1">
-                            {job.cleaningType === 'Profonda' ? '🧹 Profonda' : '✨ Repasso'}
-                          </div>
-                        )}
-                        {job.startTime && (
-                          <div className="text-gray-600">
-                            {formatTime(job.startTime)}
-                            {job.endTime && ` - ${formatTime(job.endTime)}`}
-                          </div>
-                        )}
-                        {job.resource1Name && (
-                          <div className="text-gray-600 mt-1">
-                            👤{' '}
-                            {[
-                              job.resource1Name,
-                              job.resource2Name,
-                              job.resource3Name,
-                              job.resource4Name,
-                              job.resource5Name,
-                              job.resource6Name,
-                            ]
-                              .filter(Boolean)
-                              .join(', ')}
-                          </div>
-                        )}
-                        {job.hoursWorked && (
-                          <div className="text-gray-600 mt-1">⏱️ {job.hoursWorked}h</div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

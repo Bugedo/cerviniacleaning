@@ -26,8 +26,8 @@ export async function GET(request: Request) {
       active: row[6] || '',
     }));
 
-    // Leer calendario para calcular horas
-    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Q');
+    // Leer calendario para calcular horas (hasta columna Z para incluir todos los campos)
+    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z');
     const calendarRows = calendarData.slice(1);
 
     // Calcular horas por recurso
@@ -37,10 +37,15 @@ export async function GET(request: Request) {
 
       calendarRows.forEach((row) => {
         const jobDate = row[1] || '';
-        const resource1Id = row[9] || '';
-        const resource2Id = row[11] || '';
-        const coordinatorId = row[13] || '';
-        const hoursWorked = parseFloat(row[14] || '0');
+        // Leer todos los recursos (hasta 6): columnas 10, 12, 14, 16, 18, 20 (índices 9, 11, 13, 15, 17, 19)
+        const resource1Id = row[10] || '';
+        const resource2Id = row[12] || '';
+        const resource3Id = row[14] || '';
+        const resource4Id = row[16] || '';
+        const resource5Id = row[18] || '';
+        const resource6Id = row[20] || '';
+        const coordinatorId = row[21] || ''; // Columna 22 (índice 21)
+        const hoursWorked = parseFloat(row[23] || '0'); // Columna 24 (índice 23) - Ore Lavorate
         const type = row[5] || '';
 
         // Filtrar por mes si se especifica
@@ -49,12 +54,17 @@ export async function GET(request: Request) {
           if (jobMonth !== month) return;
         }
 
-        // Verificar si el recurso está asignado a este trabajo
-        if (
+        // Verificar si el recurso está asignado a este trabajo (cualquiera de los 6 recursos o coordinador)
+        const isAssigned = 
           resource1Id === resource.id ||
           resource2Id === resource.id ||
-          (coordinatorId === resource.id && type === 'Supervisione')
-        ) {
+          resource3Id === resource.id ||
+          resource4Id === resource.id ||
+          resource5Id === resource.id ||
+          resource6Id === resource.id ||
+          (coordinatorId === resource.id && type === 'Supervisione');
+
+        if (isAssigned) {
           totalHours += hoursWorked;
           jobs.push({
             date: jobDate,
