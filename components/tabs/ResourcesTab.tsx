@@ -57,6 +57,22 @@ export default function ResourcesTab() {
     return `${months[parseInt(monthNum) - 1]} ${year}`;
   };
 
+  const formatHours = (hours: string): string => {
+    const hoursNum = parseFloat(hours || '0');
+    if (isNaN(hoursNum) || hoursNum === 0) return '0h';
+    
+    const wholeHours = Math.floor(hoursNum);
+    const minutes = Math.round((hoursNum - wholeHours) * 60);
+    
+    if (minutes === 0) {
+      return `${wholeHours}h`;
+    } else if (minutes === 30) {
+      return `${wholeHours}h e mezza`;
+    } else {
+      return `${wholeHours}h ${minutes}min`;
+    }
+  };
+
   if (loading) {
     return (
       <div>
@@ -124,7 +140,7 @@ export default function ResourcesTab() {
                   {resource.jobsCount}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                  {parseFloat(resource.totalHours || '0').toFixed(2)}h
+                  {formatHours(resource.totalHours)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span

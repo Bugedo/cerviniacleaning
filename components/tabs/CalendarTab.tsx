@@ -85,7 +85,9 @@ export default function CalendarTab() {
       const response = await fetch(`/api/calendar?weekStart=${weekStart}`);
       if (!response.ok) throw new Error('Error al cargar calendario');
       const data = await response.json();
-      setJobs(data.jobs || []);
+      // Filtrar supervisiones - solo mostrar trabajos (Lavoro)
+      const jobsOnly = (data.jobs || []).filter((job: Job) => job.type === 'Lavoro');
+      setJobs(jobsOnly);
     } catch (error) {
       console.error('Error fetching calendar:', error);
       setJobs([]);
@@ -203,17 +205,11 @@ export default function CalendarTab() {
                       return (
                         <div
                           key={job.id}
-                          className={`p-2 rounded text-xs ${
-                            job.type === 'Supervisione'
-                              ? 'bg-blue-100 border border-blue-300'
-                              : 'bg-green-100 border border-green-300'
-                          }`}
+                          className="p-2 rounded text-xs bg-green-100 border border-green-300"
                         >
                           {/* Vista compacta: Solo propiedad, tipo de limpieza y horario */}
                           <div className="font-semibold mb-1">
-                            {job.type === 'Supervisione'
-                              ? '👁️ Supervisione'
-                              : job.propertyName || 'Lavoro'}
+                            {job.propertyName || 'Lavoro'}
                           </div>
                           
                           {job.cleaningType && (
@@ -244,7 +240,7 @@ export default function CalendarTab() {
                                 className="cursor-pointer hover:bg-gray-200 px-1 rounded"
                                 title="Clicca per modificare"
                               >
-                                {formatTime(job.startTime)}
+                                {formatTime(job.startTime) || '--:--'}
                                 {isSavingStart && ' ...'}
                               </span>
                             )}
