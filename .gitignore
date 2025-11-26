@@ -44,3 +44,6 @@ next-env.d.ts
 *-*.json
 !package*.json
 !tsconfig.json
+
+# PDF files
+*.pdf
