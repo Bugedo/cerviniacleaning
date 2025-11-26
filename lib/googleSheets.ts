@@ -2,16 +2,23 @@ import { google } from 'googleapis';
 import path from 'path';
 import { readFileSync } from 'fs';
 
-const credentialsPath = path.join(process.cwd(), 'cervinia-cleaning-2eef5bdde34b.json');
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let auth: any = null;
 
+function getCredentials() {
+  // En Vercel, usar variables de entorno
+  if (process.env.GOOGLE_CREDENTIALS) {
+    return JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  }
+  
+  // En local, leer del archivo
+  const credentialsPath = path.join(process.cwd(), 'cervinia-cleaning-2eef5bdde34b.json');
+  return JSON.parse(readFileSync(credentialsPath, 'utf8'));
+}
+
 export async function getGoogleSheetsClient() {
   if (!auth) {
-    const credentials = JSON.parse(
-      readFileSync(credentialsPath, 'utf8')
-    );
+    const credentials = getCredentials();
 
     auth = new google.auth.GoogleAuth({
       credentials,
@@ -28,9 +35,7 @@ export async function getGoogleSheetsClient() {
 
 export async function getGoogleDriveClient() {
   if (!auth) {
-    const credentials = JSON.parse(
-      readFileSync(credentialsPath, 'utf8')
-    );
+    const credentials = getCredentials();
 
     auth = new google.auth.GoogleAuth({
       credentials,

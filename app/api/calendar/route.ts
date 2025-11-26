@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSpreadsheetData } from '@/lib/googleSheets';
+import { getSpreadsheetData, appendSpreadsheetData } from '@/lib/googleSheets';
 import { readFileSync } from 'fs';
 import path from 'path';
 
@@ -69,3 +69,70 @@ export async function GET(request: Request) {
   }
 }
 
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { date, startTime, endTime, propertyId, clientId, cleaningType } = body;
+
+    if (!date || !propertyId || !clientId) {
+      return NextResponse.json(
+        { error: 'Fecha, propiedad y cliente son requeridos' },
+        { status: 400 }
+      );
+    }
+
+    const configPath = path.join(process.cwd(), 'sheets-config.json');
+    const configFile = readFileSync(configPath, 'utf8');
+    const config = JSON.parse(configFile);
+
+    // Leer clientes y propiedades para obtener nombres
+    const clientsData = await getSpreadsheetData(config.sheets.clients, 'Clienti!A:Z');
+    const clientsRows = clientsData.slice(1);
+    const client = clientsRows.find(row => row[0] === clientId);
+    const clientName = client ? (client[1] || '') : '';
+
+    const propertiesData = await getSpreadsheetData(config.sheets.clients, 'Proprietà!A:Z');
+    const propertiesRows = propertiesData.slice(1);
+    const property = propertiesRows.find(row => row[0] === propertyId);
+    const propertyName = property ? (property[4] || '') : '';
+
+    // Leer calendario para obtener el próximo ID
+    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:A');
+    const nextId = calendarData.length;
+
+    const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+    const dateObj = new Date(date);
+    const dayName = dayNames[dateObj.getDay()];
+
+    const newJob = [
+      nextId.toString(),
+      date,
+      dayName,
+      startTime || '',
+      endTime || '',
+      'Lavoro',
+      cleaningType || '',
+      propertyId,
+      propertyName,
+      clientName,
+      '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+      'Pianificato',
+      '',
+    ];
+
+    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z', [newJob]);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Evento creato con successo',
+      id: nextId.toString(),
+    });
+  } catch (error) {
+    console.error('Error creating job:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Errore nella creazione del lavoro';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
+  }
+}

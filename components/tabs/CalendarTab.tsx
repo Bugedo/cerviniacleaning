@@ -31,13 +31,25 @@ interface Job {
   notes: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+  properties: Array<{ id: string; location: string }>;
+}
+
 export default function CalendarTab() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [editingTime, setEditingTime] = useState<{ jobId: string; field: 'startTime' | 'endTime' } | null>(null);
+  const [editingPropertyName, setEditingPropertyName] = useState<string | null>(null);
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+  const [editingResources, setEditingResources] = useState<string | null>(null);
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   const getWeekStart = (date: Date): string => {
     const d = new Date(date);
@@ -73,10 +85,31 @@ export default function CalendarTab() {
     return days[date.getDay()];
   };
 
+  const getMonthName = (date: Date): string => {
+    const months = [
+      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ];
+    return months[date.getMonth()];
+  };
+
   useEffect(() => {
     fetchJobs();
+    fetchClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWeek]);
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch('/api/clients');
+      if (!response.ok) throw new Error('Error al cargar clientes');
+      const data = await response.json();
+      setClients(data.clients || []);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      setClients([]);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -110,6 +143,37 @@ export default function CalendarTab() {
     );
   };
 
+  const handleDateChange = (jobId: string, value: string) => {
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId ? { ...job, date: value } : job
+      )
+    );
+  };
+
+  const handleDateBlur = async (jobId: string, value: string) => {
+    setSaving((prev) => ({ ...prev, [`${jobId}-date`]: true }));
+    
+    try {
+      const response = await fetch(`/api/calendar/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ date: value }),
+      });
+
+      if (!response.ok) throw new Error('Error al guardar');
+      
+      await fetchJobs(); // Recargar para obtener el día actualizado
+    } catch (error) {
+      console.error('Error saving date:', error);
+    } finally {
+      setSaving((prev) => ({ ...prev, [`${jobId}-date`]: false }));
+      setEditingDate(null);
+    }
+  };
+
   const handleTimeBlur = async (jobId: string, field: 'startTime' | 'endTime', value: string) => {
     setSaving((prev) => ({ ...prev, [`${jobId}-${field}`]: true }));
     
@@ -122,22 +186,118 @@ export default function CalendarTab() {
         body: JSON.stringify({ [field]: value }),
       });
 
-      if (!response.ok) {
-        throw new Error('Error al guardar');
-      }
+      if (!response.ok) throw new Error('Error al guardar');
+      
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, [field]: value } : job
+        )
+      );
     } catch (error) {
       console.error('Error saving time:', error);
-      alert('Errore nel salvataggio. Riprova.');
-      // Recargar para revertir cambios
-      fetchJobs();
     } finally {
       setSaving((prev) => ({ ...prev, [`${jobId}-${field}`]: false }));
       setEditingTime(null);
     }
   };
 
-  const weekStart = getWeekStart(currentWeek);
-  const weekDays = getWeekDays(weekStart);
+  const handlePropertyNameBlur = async (jobId: string, value: string) => {
+    setSaving((prev) => ({ ...prev, [`${jobId}-propertyName`]: true }));
+    
+    try {
+      const response = await fetch(`/api/calendar/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ propertyName: value }),
+      });
+
+      if (!response.ok) throw new Error('Error al guardar');
+      
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, propertyName: value } : job
+        )
+      );
+    } catch (error) {
+      console.error('Error saving property name:', error);
+    } finally {
+      setSaving((prev) => ({ ...prev, [`${jobId}-propertyName`]: false }));
+      setEditingPropertyName(null);
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
+
+    try {
+      const response = await fetch(`/api/calendar/${jobId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar');
+      
+      setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      alert('Errore nell\'eliminazione dell\'evento');
+    }
+  };
+
+  const handleCreateJob = async (formData: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    clientId: string;
+    propertyId: string;
+    cleaningType: string;
+  }) => {
+    try {
+      const response = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error('Error al crear evento');
+      
+      await fetchJobs();
+      setShowCreateModal(false);
+      setSelectedDate('');
+    } catch (error) {
+      console.error('Error creating job:', error);
+      alert('Errore nella creazione dell\'evento');
+    }
+  };
+
+  const handleEditJob = async (jobId: string, formData: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    propertyId?: string;
+    cleaningType?: string;
+  }) => {
+    try {
+      const response = await fetch(`/api/calendar/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar');
+      
+      await fetchJobs();
+      setEditingJob(null);
+    } catch (error) {
+      console.error('Error updating job:', error);
+      alert('Errore nell\'aggiornamento dell\'evento');
+    }
+  };
 
   if (loading) {
     return (
@@ -150,11 +310,27 @@ export default function CalendarTab() {
     );
   }
 
+  const weekDays = getWeekDays(getWeekStart(currentWeek));
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Calendario</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Calendario</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {getMonthName(weekDays[0])} {weekDays[0].getFullYear()}
+            {weekDays[0].getMonth() !== weekDays[6].getMonth() && (
+              <> - {getMonthName(weekDays[6])} {weekDays[6].getFullYear()}</>
+            )}
+          </p>
+        </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            + Nuovo Evento
+          </button>
           <button
             onClick={() => changeWeek(-1)}
             className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
@@ -186,30 +362,128 @@ export default function CalendarTab() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 min-h-[400px]">
+        <div className="grid grid-cols-7 min-h-[800px]">
           {weekDays.map((day, dayIndex) => {
             const dayJobs = getJobsForDay(day);
+            const dayStr = day.toISOString().split('T')[0];
             return (
-              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[100px]">
+              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative">
                 {dayJobs.length === 0 ? (
-                  <div className="text-sm text-gray-400 text-center mt-2">Nessun lavoro</div>
+                  <div className="text-sm text-gray-400 text-center mt-2">
+                    Nessun lavoro
+                    <button
+                      onClick={() => {
+                        setSelectedDate(dayStr);
+                        setShowCreateModal(true);
+                      }}
+                      className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      + Aggiungi
+                    </button>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {dayJobs.map((job) => {
-                      const isExpanded = expandedJob === job.id;
                       const isEditingStart = editingTime?.jobId === job.id && editingTime.field === 'startTime';
                       const isEditingEnd = editingTime?.jobId === job.id && editingTime.field === 'endTime';
+                      const isEditingPropertyName = editingPropertyName === job.id;
+                      const isEditingDate = editingDate === job.id;
                       const isSavingStart = saving[`${job.id}-startTime`];
                       const isSavingEnd = saving[`${job.id}-endTime`];
+                      const isSavingPropertyName = saving[`${job.id}-propertyName`];
+                      const isSavingDate = saving[`${job.id}-date`];
 
                       return (
                         <div
                           key={job.id}
                           className="p-2 rounded text-xs bg-green-100 border border-green-300"
                         >
-                          {/* Vista compacta: Solo propiedad, tipo de limpieza y horario */}
+                          {/* Botones de acción */}
+                          <div className="flex justify-end gap-1 mb-1">
+                            <button
+                              onClick={() => setEditingJob(job)}
+                              className="text-blue-600 hover:text-blue-800 text-xs"
+                              title="Modifica"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteJob(job.id)}
+                              className="text-red-600 hover:text-red-800 text-xs"
+                              title="Elimina"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+
+                          {/* Nombre de propiedad editable */}
                           <div className="font-semibold mb-1">
-                            {job.propertyName || 'Lavoro'}
+                            {isEditingPropertyName ? (
+                              <input
+                                type="text"
+                                value={job.propertyName || ''}
+                                onChange={(e) => {
+                                  setJobs((prevJobs) =>
+                                    prevJobs.map((j) =>
+                                      j.id === job.id ? { ...j, propertyName: e.target.value } : j
+                                    )
+                                  );
+                                }}
+                                onBlur={(e) => handlePropertyNameBlur(job.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handlePropertyNameBlur(job.id, job.propertyName);
+                                  }
+                                }}
+                                className="w-full px-1 py-0.5 text-xs border border-gray-300 rounded font-semibold"
+                                autoFocus
+                              />
+                            ) : (
+                              <span
+                                onClick={() => setEditingPropertyName(job.id)}
+                                className="cursor-pointer hover:bg-gray-200 px-1 rounded block"
+                                title="Clicca per modificare"
+                              >
+                                {job.propertyName || 'Lavoro'}
+                                {isSavingPropertyName && ' ...'}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Cliente */}
+                          {job.client && (
+                            <div className="text-xs text-gray-600 mb-1">
+                              Cliente: {job.client}
+                            </div>
+                          )}
+
+                          {/* Fecha editable */}
+                          <div className="text-gray-600 mb-1">
+                            <span className="text-xs font-medium">Data:</span>{' '}
+                            {isEditingDate ? (
+                              <input
+                                type="date"
+                                value={job.date}
+                                onChange={(e) => handleDateChange(job.id, e.target.value)}
+                                onBlur={(e) => handleDateBlur(job.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleDateBlur(job.id, job.date);
+                                  }
+                                }}
+                                className="w-full px-1 py-0.5 text-xs border border-gray-300 rounded"
+                                autoFocus
+                              />
+                            ) : (
+                              <span
+                                onClick={() => setEditingDate(job.id)}
+                                className="cursor-pointer hover:bg-gray-200 px-1 rounded"
+                                title="Clicca per modificare"
+                              >
+                                {job.date}
+                                {isSavingDate && ' ...'}
+                              </span>
+                            )}
                           </div>
                           
                           {job.cleaningType && (
@@ -218,8 +492,9 @@ export default function CalendarTab() {
                             </div>
                           )}
 
-                          {/* Horario editable */}
-                          <div className="text-gray-600 mb-1">
+                          {/* Horario editable - siempre visible */}
+                          <div className="text-gray-600 mb-2">
+                            <span className="text-xs font-medium">Inizio:</span>{' '}
                             {isEditingStart ? (
                               <input
                                 type="time"
@@ -244,79 +519,89 @@ export default function CalendarTab() {
                                 {isSavingStart && ' ...'}
                               </span>
                             )}
-                            {job.endTime && (
-                              <>
-                                {' - '}
-                                {isEditingEnd ? (
-                                  <input
-                                    type="time"
-                                    value={formatTime(job.endTime)}
-                                    onChange={(e) => handleTimeChange(job.id, 'endTime', e.target.value)}
-                                    onBlur={(e) => handleTimeBlur(job.id, 'endTime', e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        handleTimeBlur(job.id, 'endTime', job.endTime);
-                                      }
-                                    }}
-                                    className="w-16 px-1 py-0.5 text-xs border border-gray-300 rounded"
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <span
-                                    onClick={() => setEditingTime({ jobId: job.id, field: 'endTime' })}
-                                    className="cursor-pointer hover:bg-gray-200 px-1 rounded"
-                                    title="Clicca per modificare"
-                                  >
-                                    {formatTime(job.endTime)}
-                                    {isSavingEnd && ' ...'}
-                                  </span>
-                                )}
-                              </>
+                            {' | '}
+                            <span className="text-xs font-medium">Fine:</span>{' '}
+                            {isEditingEnd ? (
+                              <input
+                                type="time"
+                                value={formatTime(job.endTime)}
+                                onChange={(e) => handleTimeChange(job.id, 'endTime', e.target.value)}
+                                onBlur={(e) => handleTimeBlur(job.id, 'endTime', e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleTimeBlur(job.id, 'endTime', job.endTime);
+                                  }
+                                }}
+                                className="w-16 px-1 py-0.5 text-xs border border-gray-300 rounded"
+                                autoFocus
+                              />
+                            ) : (
+                              <span
+                                onClick={() => setEditingTime({ jobId: job.id, field: 'endTime' })}
+                                className="cursor-pointer hover:bg-gray-200 px-1 rounded"
+                                title="Clicca per modificare"
+                              >
+                                {formatTime(job.endTime) || '--:--'}
+                                {isSavingEnd && ' ...'}
+                              </span>
                             )}
                           </div>
 
-                          {/* Botón para más info */}
-                          <button
-                            onClick={() => setExpandedJob(isExpanded ? null : job.id)}
-                            className="text-xs text-blue-600 hover:text-blue-800 mt-1 underline"
-                          >
-                            {isExpanded ? 'Meno info' : 'Più info'}
-                          </button>
-
-                          {/* Información expandida: Empleados y horas */}
-                          {isExpanded && (
-                            <div className="mt-2 pt-2 border-t border-gray-300">
-                              {[
-                                job.resource1Name,
-                                job.resource2Name,
-                                job.resource3Name,
-                                job.resource4Name,
-                                job.resource5Name,
-                                job.resource6Name,
-                              ]
-                                .filter(Boolean)
-                                .length > 0 && (
-                                <div className="text-gray-600 mb-1">
-                                  <span className="font-medium">Dipendenti:</span>{' '}
-                                  {[
-                                    job.resource1Name,
-                                    job.resource2Name,
-                                    job.resource3Name,
-                                    job.resource4Name,
-                                    job.resource5Name,
-                                    job.resource6Name,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(', ')}
-                                </div>
-                              )}
-                              {job.hoursWorked && (
-                                <div className="text-gray-600">
-                                  <span className="font-medium">Tempo:</span> {job.hoursWorked}h
-                                </div>
-                              )}
+                          {/* Empleados - siempre visible y editable */}
+                          <div className="mt-2 pt-2 border-t border-gray-300">
+                            <div className="text-xs font-medium text-gray-700 mb-1">Dipendenti:</div>
+                            <div className="space-y-1">
+                              {[1, 2, 3, 4, 5, 6].map((num) => {
+                                const resourceName = job[`resource${num}Name` as keyof Job] as string;
+                                const isEditingResource = editingResources === `${job.id}-${num}`;
+                                
+                                return (
+                                  <div key={num} className="flex items-center gap-1">
+                                    <span className="text-xs text-gray-500 w-4">{num}:</span>
+                                    {isEditingResource ? (
+                                      <input
+                                        type="text"
+                                        value={resourceName || ''}
+                                        placeholder="Nome dipendente"
+                                        onChange={(e) => {
+                                          setJobs((prevJobs) =>
+                                            prevJobs.map((j) =>
+                                              j.id === job.id
+                                                ? { ...j, [`resource${num}Name`]: e.target.value }
+                                                : j
+                                            )
+                                          );
+                                        }}
+                                        onBlur={() => {
+                                          setEditingResources(null);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            setEditingResources(null);
+                                          }
+                                        }}
+                                        className="flex-1 px-1 py-0.5 text-xs border border-gray-300 rounded"
+                                        autoFocus
+                                      />
+                                    ) : (
+                                      <span
+                                        onClick={() => setEditingResources(`${job.id}-${num}`)}
+                                        className="flex-1 cursor-pointer hover:bg-gray-200 px-1 py-0.5 rounded text-xs"
+                                        title="Clicca per modificare"
+                                      >
+                                        {resourceName || '---'}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          )}
+                            {job.hoursWorked && (
+                              <div className="text-gray-600 mt-1 text-xs">
+                                <span className="font-medium">Tempo:</span> {job.hoursWorked}h
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -326,6 +611,186 @@ export default function CalendarTab() {
             );
           })}
         </div>
+      </div>
+
+      {/* Modal para crear/editar evento */}
+      {(showCreateModal || editingJob) && (
+        <EventModal
+          clients={clients}
+          initialDate={selectedDate || editingJob?.date || ''}
+          job={editingJob}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingJob(null);
+            setSelectedDate('');
+          }}
+          onSubmit={editingJob 
+            ? (data) => handleEditJob(editingJob.id, data)
+            : handleCreateJob
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+// Componente Modal para crear/editar eventos
+function EventModal({
+  clients,
+  initialDate,
+  job,
+  onClose,
+  onSubmit,
+}: {
+  clients: Client[];
+  initialDate: string;
+  job: Job | null;
+  onClose: () => void;
+  onSubmit: (data: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    clientId?: string;
+    propertyId?: string;
+    cleaningType?: string;
+  }) => void;
+}) {
+  const [formData, setFormData] = useState({
+    date: initialDate || '',
+    startTime: job?.startTime || '',
+    endTime: job?.endTime || '',
+    clientId: job?.client ? clients.find(c => c.name === job.client)?.id || '' : '',
+    propertyId: job?.propertyId || '',
+    cleaningType: job?.cleaningType || '',
+  });
+
+  const selectedClient = clients.find(c => c.id === formData.clientId);
+  const availableProperties = selectedClient?.properties || [];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.date || !formData.clientId || !formData.propertyId) {
+      alert('Per favore, compila tutti i campi obbligatori');
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 className="text-lg font-semibold mb-4">
+          {job ? 'Modifica Evento' : 'Nuovo Evento'}
+        </h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data *
+            </label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ora Inizio
+              </label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ora Fine
+              </label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cliente *
+            </label>
+            <select
+              value={formData.clientId}
+              onChange={(e) => setFormData({ ...formData, clientId: e.target.value, propertyId: '' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              required
+            >
+              <option value="">Seleziona cliente</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Proprietà *
+            </label>
+            <select
+              value={formData.propertyId}
+              onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              required
+              disabled={!formData.clientId}
+            >
+              <option value="">Seleziona proprietà</option>
+              {availableProperties.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {property.location}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo di Pulizia
+            </label>
+            <select
+              value={formData.cleaningType}
+              onChange={(e) => setFormData({ ...formData, cleaningType: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">Nessuno</option>
+              <option value="Profonda">Profonda</option>
+              <option value="Repasso">Repasso</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {job ? 'Salva' : 'Crea'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

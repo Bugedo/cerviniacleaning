@@ -5,10 +5,10 @@ import path from 'path';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const propertyId = params.id;
+    const { id: propertyId } = await params;
     const body = await request.json();
 
     // Leer configuración
@@ -35,10 +35,6 @@ export async function PUT(
     // Mapear los campos del body a las columnas del sheet
     // Orden de columnas: ID, ID Cliente, Nome Cliente, Nome Proprietario, Location, ...
     const rowIndex = propertyIndex + 1; // +1 porque las filas en Sheets empiezan en 1
-    const currentRow = propertiesData[propertyIndex];
-    
-    // Crear nueva fila con los valores actualizados
-    const updatedRow = [...currentRow];
     
     // Mapeo de campos a índices de columna (0-based, pero en Sheets API es 1-based)
     const fieldMap: Record<string, number> = {
