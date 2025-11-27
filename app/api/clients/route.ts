@@ -1,23 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getSpreadsheetData } from '@/lib/googleSheets';
-import { readFileSync } from 'fs';
+import { getSheetsConfig } from '@/lib/sheetsConfig';
 import path from 'path';
 import * as XLSX from 'xlsx';
 
 export async function GET() {
   try {
     // Intentar leer configuración de sheets
-    const configPath = path.join(process.cwd(), 'sheets-config.json');
     let config;
     let useGoogleSheets = false;
     
     try {
-      const configFile = readFileSync(configPath, 'utf8');
-      config = JSON.parse(configFile);
+      config = getSheetsConfig();
       useGoogleSheets = true;
     } catch {
       // Si no hay config, usar datos del Excel directamente
-      console.log('No se encontró sheets-config.json, usando datos del Excel...');
+      console.log('No se encontró sheets-config, usando datos del Excel...');
     }
 
     interface Client {

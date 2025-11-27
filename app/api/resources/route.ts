@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getSpreadsheetData } from '@/lib/googleSheets';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { getSheetsConfig } from '@/lib/sheetsConfig';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month'); // YYYY-MM
 
-    const configPath = path.join(process.cwd(), 'sheets-config.json');
-    const configFile = readFileSync(configPath, 'utf8');
-    const config = JSON.parse(configFile);
+    const config = getSheetsConfig();
 
     // Leer recursos
     const resourcesData = await getSpreadsheetData(config.sheets.resources, 'Risorse!A:G');

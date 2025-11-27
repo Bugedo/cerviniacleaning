@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getGoogleSheetsClient, getSpreadsheetData } from '@/lib/googleSheets';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { getSheetsConfig } from '@/lib/sheetsConfig';
 
 export async function PUT(
   request: Request,
@@ -11,9 +10,7 @@ export async function PUT(
     const { id: jobId } = await params;
     const body = await request.json();
 
-    const configPath = path.join(process.cwd(), 'sheets-config.json');
-    const configFile = readFileSync(configPath, 'utf8');
-    const config = JSON.parse(configFile);
+    const config = getSheetsConfig();
 
     const calendarSheetId = config.sheets.calendar;
     const sheets = await getGoogleSheetsClient();
@@ -119,9 +116,7 @@ export async function DELETE(
   try {
     const { id: jobId } = await params;
 
-    const configPath = path.join(process.cwd(), 'sheets-config.json');
-    const configFile = readFileSync(configPath, 'utf8');
-    const config = JSON.parse(configFile);
+    const config = getSheetsConfig();
 
     const calendarSheetId = config.sheets.calendar;
     const sheets = await getGoogleSheetsClient();

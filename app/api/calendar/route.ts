@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getSpreadsheetData, appendSpreadsheetData } from '@/lib/googleSheets';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { getSheetsConfig } from '@/lib/sheetsConfig';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const weekStart = searchParams.get('weekStart'); // YYYY-MM-DD
 
-    const configPath = path.join(process.cwd(), 'sheets-config.json');
-    const configFile = readFileSync(configPath, 'utf8');
-    const config = JSON.parse(configFile);
+    const config = getSheetsConfig();
 
     // Leer datos del calendario (ahora con más columnas)
     const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z');
@@ -81,9 +78,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const configPath = path.join(process.cwd(), 'sheets-config.json');
-    const configFile = readFileSync(configPath, 'utf8');
-    const config = JSON.parse(configFile);
+    const config = getSheetsConfig();
 
     // Leer clientes y propiedades para obtener nombres
     const clientsData = await getSpreadsheetData(config.sheets.clients, 'Clienti!A:Z');
