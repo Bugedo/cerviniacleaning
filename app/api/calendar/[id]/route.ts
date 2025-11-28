@@ -46,7 +46,11 @@ export async function PUT(
       }
     }
 
-    // Mapeo de campos a índices de columna
+    // Si se actualiza un resourceId, obtener el nombre del recurso
+    const resourcesData = await getSpreadsheetData(config.sheets.resources, 'Risorse!A:G');
+    const resourcesRows = resourcesData.slice(1);
+    
+    // Mapeo de campos a índices de columna (hasta 11 recursos)
     const fieldMap: Record<string, number> = {
       date: 1, // Data (columna B)
       day: 2, // Giorno (columna C)
@@ -55,14 +59,27 @@ export async function PUT(
       propertyId: 7, // ID Proprietà (columna H)
       propertyName: 8, // Nome Proprietà (columna I)
       client: 9, // Cliente (columna J)
-      resource1Id: 10, // ID Risorsa 1 (columna K)
-      resource2Id: 12, // ID Risorsa 2 (columna M)
-      resource3Id: 14, // ID Risorsa 3 (columna O)
-      resource4Id: 16, // ID Risorsa 4 (columna Q)
-      resource5Id: 18, // ID Risorsa 5 (columna S)
-      resource6Id: 20, // ID Risorsa 6 (columna U)
       cleaningType: 6, // Tipo di Pulizia (columna G)
     };
+
+    // Agregar mapeo para recursos 1-11
+    for (let i = 1; i <= 11; i++) {
+      fieldMap[`resource${i}Id`] = 9 + (i - 1) * 2 + 1; // 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+      fieldMap[`resource${i}Name`] = 9 + (i - 1) * 2 + 2; // 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+    }
+    
+    // Obtener nombres de recursos si se actualiza un resourceId
+    for (let i = 1; i <= 11; i++) {
+      const resourceIdKey = `resource${i}Id` as keyof typeof body;
+      if (body[resourceIdKey]) {
+        const resourceId = body[resourceIdKey] as string;
+        const resource = resourcesRows.find(row => row[0] === resourceId);
+        if (resource) {
+          const resourceName = `${resource[1] || ''} ${resource[2] || ''}`.trim();
+          (body as Record<string, string>)[`resource${i}Name`] = resourceName;
+        }
+      }
+    }
 
     // Si se actualiza la fecha, también actualizar el día
     if (body.date) {
@@ -78,7 +95,15 @@ export async function PUT(
       if (fieldMap[key] !== undefined) {
         const colIndex = fieldMap[key];
         // Convertir índice a letra de columna (A=0, B=1, etc.)
-        const columnLetter = String.fromCharCode(65 + colIndex);
+        // Para columnas después de Z, usar AA, AB, etc.
+        let columnLetter = '';
+        if (colIndex < 26) {
+          columnLetter = String.fromCharCode(65 + colIndex);
+        } else {
+          const firstLetter = String.fromCharCode(65 + Math.floor((colIndex - 26) / 26));
+          const secondLetter = String.fromCharCode(65 + ((colIndex - 26) % 26));
+          columnLetter = firstLetter + secondLetter;
+        }
         const range = `Calendario!${columnLetter}${rowIndex}`;
         updates.push({
           range,

@@ -1,6 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface Job {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  propertyName: string;
+  client: string;
+}
 
 interface Resource {
   id: string;
@@ -12,12 +21,16 @@ interface Resource {
   active: string;
   totalHours: string;
   jobsCount: number;
+  jobs: Job[];
+  weeklyHours: Record<string, number>;
+  monthlyHours: Record<string, number>;
 }
 
 export default function ResourcesTab() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState('');
+  const [expandedResource, setExpandedResource] = useState<string | null>(null);
 
   useEffect(() => {
     fetchResources();
@@ -57,8 +70,8 @@ export default function ResourcesTab() {
     return `${months[parseInt(monthNum) - 1]} ${year}`;
   };
 
-  const formatHours = (hours: string): string => {
-    const hoursNum = parseFloat(hours || '0');
+  const formatHours = (hours: string | number): string => {
+    const hoursNum = typeof hours === 'string' ? parseFloat(hours || '0') : hours;
     if (isNaN(hoursNum) || hoursNum === 0) return '0h';
     
     const wholeHours = Math.floor(hoursNum);
@@ -71,6 +84,27 @@ export default function ResourcesTab() {
     } else {
       return `${wholeHours}h ${minutes}min`;
     }
+  };
+
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatWeek = (weekStart: string): string => {
+    const date = new Date(weekStart);
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 6);
+    return `${formatDate(weekStart)} - ${formatDate(endDate.toISOString().split('T')[0])}`;
+  };
+
+  const formatMonthLabel = (monthStr: string): string => {
+    const [year, month] = monthStr.split('-');
+    const months = [
+      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ];
+    return `${months[parseInt(month) - 1]} ${year}`;
   };
 
   if (loading) {
@@ -122,39 +156,145 @@ export default function ResourcesTab() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Stato
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Azioni
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {resources.map((resource) => (
-              <tr key={resource.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {resource.id}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {resource.name} {resource.surname}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {resource.role}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {resource.jobsCount}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                  {formatHours(resource.totalHours)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      resource.active === 'Sì'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {resource.active === 'Sì' ? 'Attivo' : 'Inattivo'}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {resources.map((resource) => {
+              const isExpanded = expandedResource === resource.id;
+              return (
+                <React.Fragment key={resource.id}>
+                  <tr className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {resource.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {resource.name} {resource.surname}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {resource.role}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {resource.jobsCount}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                      {formatHours(resource.totalHours)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          resource.active === 'Sì'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {resource.active === 'Sì' ? 'Attivo' : 'Inattivo'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => setExpandedResource(isExpanded ? null : resource.id)}
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        {isExpanded ? 'Nascondi' : 'Dettagli'}
+                      </button>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-4 bg-gray-50">
+                        <div className="space-y-4">
+                          {/* Eventos */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                              Eventi ({resource.jobs.length})
+                            </h4>
+                            {resource.jobs.length > 0 ? (
+                              <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ora</th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Proprietà</th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Cliente</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="bg-white divide-y divide-gray-200">
+                                    {resource.jobs.map((job) => (
+                                      <tr key={job.id} className="hover:bg-gray-50">
+                                        <td className="px-3 py-2 text-xs text-gray-900">
+                                          {formatDate(job.date)}
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-gray-500">
+                                          {job.startTime} - {job.endTime}
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-gray-500">
+                                          {job.propertyName}
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-gray-500">
+                                          {job.client}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">Nessun evento</p>
+                            )}
+                          </div>
+
+                          {/* Ore per settimana */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                              Ore per Settimana
+                            </h4>
+                            {Object.keys(resource.weeklyHours).length > 0 ? (
+                              <div className="space-y-1">
+                                {Object.entries(resource.weeklyHours)
+                                  .sort(([a], [b]) => a.localeCompare(b))
+                                  .map(([weekStart, hours]) => (
+                                    <div key={weekStart} className="flex justify-between text-sm text-gray-700 bg-white px-3 py-1 rounded border border-gray-200">
+                                      <span>{formatWeek(weekStart)}</span>
+                                      <span className="font-semibold">{formatHours(hours)}</span>
+                                    </div>
+                                  ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">Nessuna ora registrata</p>
+                            )}
+                          </div>
+
+                          {/* Ore per mese */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                              Ore per Mese
+                            </h4>
+                            {Object.keys(resource.monthlyHours).length > 0 ? (
+                              <div className="space-y-1">
+                                {Object.entries(resource.monthlyHours)
+                                  .sort(([a], [b]) => a.localeCompare(b))
+                                  .map(([month, hours]) => (
+                                    <div key={month} className="flex justify-between text-sm text-gray-700 bg-white px-3 py-1 rounded border border-gray-200">
+                                      <span>{formatMonthLabel(month)}</span>
+                                      <span className="font-semibold">{formatHours(hours)}</span>
+                                    </div>
+                                  ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">Nessuna ora registrata</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>

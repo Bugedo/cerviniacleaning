@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import ResourceManager from '@/components/ResourceManager';
 
 interface Job {
   id: string;
@@ -25,6 +26,16 @@ interface Job {
   resource5Name: string;
   resource6Id: string;
   resource6Name: string;
+  resource7Id?: string;
+  resource7Name?: string;
+  resource8Id?: string;
+  resource8Name?: string;
+  resource9Id?: string;
+  resource9Name?: string;
+  resource10Id?: string;
+  resource10Name?: string;
+  resource11Id?: string;
+  resource11Name?: string;
   coordinatorId: string;
   hoursWorked: string;
   status: string;
@@ -547,55 +558,10 @@ export default function CalendarTab() {
                             )}
                           </div>
 
-                          {/* Empleados - siempre visible y editable */}
+                          {/* Empleados - dinámico */}
                           <div className="mt-2 pt-2 border-t border-gray-300">
                             <div className="text-xs font-medium text-gray-700 mb-1">Dipendenti:</div>
-                            <div className="space-y-1">
-                              {[1, 2, 3, 4, 5, 6].map((num) => {
-                                const resourceName = job[`resource${num}Name` as keyof Job] as string;
-                                const isEditingResource = editingResources === `${job.id}-${num}`;
-                                
-                                return (
-                                  <div key={num} className="flex items-center gap-1">
-                                    <span className="text-xs text-gray-500 w-4">{num}:</span>
-                                    {isEditingResource ? (
-                                      <input
-                                        type="text"
-                                        value={resourceName || ''}
-                                        placeholder="Nome dipendente"
-                                        onChange={(e) => {
-                                          setJobs((prevJobs) =>
-                                            prevJobs.map((j) =>
-                                              j.id === job.id
-                                                ? { ...j, [`resource${num}Name`]: e.target.value }
-                                                : j
-                                            )
-                                          );
-                                        }}
-                                        onBlur={() => {
-                                          setEditingResources(null);
-                                        }}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            setEditingResources(null);
-                                          }
-                                        }}
-                                        className="flex-1 px-1 py-0.5 text-xs border border-gray-300 rounded"
-                                        autoFocus
-                                      />
-                                    ) : (
-                                      <span
-                                        onClick={() => setEditingResources(`${job.id}-${num}`)}
-                                        className="flex-1 cursor-pointer hover:bg-gray-200 px-1 py-0.5 rounded text-xs"
-                                        title="Clicca per modificare"
-                                      >
-                                        {resourceName || '---'}
-                                      </span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
+                            <ResourceManager job={job} onUpdate={fetchJobs} />
                             {job.hoursWorked && (
                               <div className="text-gray-600 mt-1 text-xs">
                                 <span className="font-medium">Tempo:</span> {job.hoursWorked}h

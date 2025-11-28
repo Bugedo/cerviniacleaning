@@ -13,35 +13,35 @@ export async function GET(request: Request) {
     const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z');
     const rows = calendarData.slice(1);
 
-    // Procesar datos
-    const jobs = rows.map((row) => ({
-      id: row[0] || '',
-      date: row[1] || '',
-      day: row[2] || '',
-      startTime: row[3] || '',
-      endTime: row[4] || '',
-      type: row[5] || '',
-      cleaningType: row[6] || '', // Tipo di Pulizia: "Profonda" o "Repasso"
-      propertyId: row[7] || '',
-      propertyName: row[8] || '',
-      client: row[9] || '',
-      resource1Id: row[10] || '',
-      resource1Name: row[11] || '',
-      resource2Id: row[12] || '',
-      resource2Name: row[13] || '',
-      resource3Id: row[14] || '',
-      resource3Name: row[15] || '',
-      resource4Id: row[16] || '',
-      resource4Name: row[17] || '',
-      resource5Id: row[18] || '',
-      resource5Name: row[19] || '',
-      resource6Id: row[20] || '',
-      resource6Name: row[21] || '',
-      coordinatorId: row[22] || '',
-      hoursWorked: row[23] || '',
-      status: row[24] || '',
-      notes: row[25] || '',
-    }));
+    // Procesar datos (hasta 11 recursos)
+    const jobs = rows.map((row) => {
+      const job: Record<string, string> = {
+        id: row[0] || '',
+        date: row[1] || '',
+        day: row[2] || '',
+        startTime: row[3] || '',
+        endTime: row[4] || '',
+        type: row[5] || '',
+        cleaningType: row[6] || '',
+        propertyId: row[7] || '',
+        propertyName: row[8] || '',
+        client: row[9] || '',
+        coordinatorId: row[22] || '',
+        hoursWorked: row[23] || '',
+        status: row[24] || '',
+        notes: row[25] || '',
+      };
+
+      // Agregar recursos 1-11
+      for (let i = 1; i <= 11; i++) {
+        const idIndex = 9 + (i - 1) * 2 + 1;
+        const nameIndex = 9 + (i - 1) * 2 + 2;
+        job[`resource${i}Id`] = row[idIndex] || '';
+        job[`resource${i}Name`] = row[nameIndex] || '';
+      }
+
+      return job;
+    });
 
     // Si se especifica una semana, filtrar
     if (weekStart) {
