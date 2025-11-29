@@ -32,6 +32,7 @@
     "unify-cervino": "tsx scripts/unify-cervino-clients.ts",
     "update-ab13": "tsx scripts/update-ab13-client.ts",
     "clear-resources": "tsx scripts/clear-resources-from-events.ts",
+    "clear-manual-hours": "tsx scripts/clear-manual-hours.ts",
     "update-gabriel-role": "tsx scripts/update-gabriel-role.ts"
   },
   "repository": {
