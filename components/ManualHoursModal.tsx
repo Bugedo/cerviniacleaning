@@ -182,7 +182,7 @@ export default function ManualHoursModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ore * (HH:MM)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ore Lavorate * (HH:MM)</label>
             <input
               type="time"
               step="900"
@@ -191,8 +191,10 @@ export default function ManualHoursModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               placeholder="Es: 04:45"
               required
+              min="00:00"
+              max="23:59"
             />
-            <p className="text-xs text-gray-500 mt-1">Formato: HH:MM (es: 04:45 = 4h 45min)</p>
+            <p className="text-xs text-gray-500 mt-1">Formato 24h: HH:MM (es: 04:45 = 4h 45min, intervali di 15 minuti)</p>
           </div>
 
           <div>
