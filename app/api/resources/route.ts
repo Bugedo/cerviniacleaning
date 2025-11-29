@@ -33,19 +33,6 @@ interface Job {
   resource11Name?: string;
 }
 
-function calculateHours(startTime: string, endTime: string): number {
-  if (!startTime || !endTime) return 0;
-
-  const [startHour, startMin] = startTime.split(':').map(Number);
-  const [endHour, endMin] = endTime.split(':').map(Number);
-
-  const startMinutes = startHour * 60 + startMin;
-  const endMinutes = endHour * 60 + endMin;
-
-  const diffMinutes = endMinutes - startMinutes;
-  return diffMinutes / 60;
-}
-
 function getWeekStart(date: Date): string {
   const d = new Date(date);
   const day = d.getDay();
@@ -207,47 +194,39 @@ export async function GET(request: Request) {
       });
 
     // Calcular horas y eventos para cada recurso
+    // NOTA: Las horas de los eventos NO se suman automáticamente.
+    // Solo se suman las horas manuales. Los eventos solo se muestran como referencia.
     const resourcesWithHours = resources.map((resource) => {
       const resourceJobs: Job[] = [];
       let totalHours = 0;
       const weeklyHours: Record<string, number> = {};
       const monthlyHours: Record<string, number> = {};
-      const isCoordinatorOnly = coordinatorOnlyIds.has(resource.id);
 
-      // Solo buscar trabajos del calendario si NO es coordinador que solo usa horas manuales
-      if (!isCoordinatorOnly) {
-        jobs.forEach((job) => {
-          let isInJob = false;
-          const hours = calculateHours(job.startTime, job.endTime);
+      // Buscar trabajos del calendario solo para referencia (NO se suman las horas)
+      jobs.forEach((job) => {
+        let isInJob = false;
 
-          // Verificar si el recurso está en alguna posición (1-11)
-          for (let i = 1; i <= 11; i++) {
-            const resourceId = job[`resource${i}Id` as keyof Job] as string;
-            if (resourceId === resource.id) {
-              isInJob = true;
-              break;
-            }
+        // Verificar si el recurso está en alguna posición (1-11)
+        for (let i = 1; i <= 11; i++) {
+          const resourceId = job[`resource${i}Id` as keyof Job] as string;
+          if (resourceId === resource.id) {
+            isInJob = true;
+            break;
           }
+        }
 
-          if (isInJob) {
-            // Filtrar por mes si se especifica
-            if (!month || getMonthStart(job.date) === month) {
-              resourceJobs.push(job);
-              totalHours += hours;
-
-              // Calcular horas por semana
-              const weekStart = getWeekStart(new Date(job.date));
-              weeklyHours[weekStart] = (weeklyHours[weekStart] || 0) + hours;
-
-              // Calcular horas por mes
-              const monthStart = getMonthStart(job.date);
-              monthlyHours[monthStart] = (monthlyHours[monthStart] || 0) + hours;
-            }
+        if (isInJob) {
+          // Filtrar por mes si se especifica
+          if (!month || getMonthStart(job.date) === month) {
+            // Agregar el job solo para referencia, pero NO sumar sus horas
+            resourceJobs.push(job);
+            // NO se suman las horas del evento: totalHours += hours;
           }
-        });
-      }
+        }
+      });
 
       // Agregar horas manuales (siempre, para todos)
+      // Estas son las ÚNICAS horas que se suman
       const resourceManualHours = manualHours.filter(
         (mh) => mh.resourceId === resource.id && (!month || getMonthStart(mh.date) === month),
       );
@@ -268,11 +247,11 @@ export async function GET(request: Request) {
         ...resource,
         totalHours: totalHours.toFixed(2),
         jobsCount: resourceJobs.length,
-        jobs: resourceJobs,
+        jobs: resourceJobs, // Eventos solo para referencia, no suman horas
         weeklyHours,
         monthlyHours,
         manualHours: resourceManualHours, // Incluir horas manuales con detalles
-        isCoordinatorOnly, // Indicar si es coordinador que solo usa horas manuales
+        isCoordinatorOnly: coordinatorOnlyIds.has(resource.id), // Indicar si es coordinador
       };
     });
 
