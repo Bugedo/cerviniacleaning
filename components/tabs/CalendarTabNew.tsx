@@ -507,6 +507,19 @@ export default function CalendarTabNew() {
             const dayStr = day.toISOString().split('T')[0];
             return (
               <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative flex flex-col">
+                {/* Botón de agregar evento siempre visible arriba de todo */}
+                <button
+                  onClick={() => {
+                    setSelectedDate(dayStr);
+                    setEditingJob(null);
+                    setShowModal(true);
+                  }}
+                  className="mb-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded border border-blue-200 w-full font-medium"
+                  title={`Aggiungi evento per ${dayStr}`}
+                >
+                  + Aggiungi Evento
+                </button>
+                
                 {dayJobs.length === 0 ? (
                   <div className="text-sm text-gray-400 text-center mt-2">
                     Nessun lavoro
@@ -604,18 +617,6 @@ export default function CalendarTabNew() {
                     })}
                   </div>
                 )}
-                {/* Botón de agregar evento siempre visible al final de cada día */}
-                <button
-                  onClick={() => {
-                    setSelectedDate(dayStr);
-                    setEditingJob(null);
-                    setShowModal(true);
-                  }}
-                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded border border-blue-200 w-full"
-                  title={`Aggiungi evento per ${dayStr}`}
-                >
-                  + Aggiungi Evento
-                </button>
               </div>
             );
           })}
