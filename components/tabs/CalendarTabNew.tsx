@@ -109,7 +109,15 @@ export default function CalendarTabNew() {
 
   const getJobsForDay = (date: Date): Job[] => {
     const dateStr = date.toISOString().split('T')[0];
-    return jobs.filter((job) => job.date === dateStr);
+    const dayJobs = jobs.filter((job) => job.date === dateStr);
+    // Eliminar duplicados basándose en el ID
+    const uniqueJobs = dayJobs.reduce((acc, job) => {
+      if (!acc.find(j => j.id === job.id)) {
+        acc.push(job);
+      }
+      return acc;
+    }, [] as Job[]);
+    return uniqueJobs;
   };
 
   const formatTime = (time: string): string => {
@@ -526,15 +534,17 @@ export default function CalendarTabNew() {
                   </div>
                 ) : (
                   <div className="space-y-2 flex-1">
-                    {dayJobs.map((job) => {
+                    {dayJobs.map((job, jobIndex) => {
                       // Obtener clientId del job o buscarlo por nombre
                       const jobClientId = job.clientId || clients.find(c => c.name === job.client)?.id || '';
                       const clientColor = getClientColor(jobClientId, clients);
                       // Verificar si es caso especial (clientId = 'SPECIAL' o notes contiene 'Caso Speciale')
                       const isSpecialCase = job.clientId === 'SPECIAL' || job.notes?.includes('Caso Speciale');
+                      // Crear una key única combinando job.id con el índice y la fecha para evitar duplicados
+                      const uniqueKey = `${job.id}-${job.date}-${jobIndex}`;
                       return (
                         <div
-                          key={job.id}
+                          key={uniqueKey}
                           className={`p-2 rounded text-xs border ${clientColor} ${isSpecialCase ? 'ring-2 ring-orange-400 border-orange-500' : ''}`}
                         >
                           {isSpecialCase && (
