@@ -506,23 +506,13 @@ export default function CalendarTabNew() {
             const dayJobs = getJobsForDay(day);
             const dayStr = day.toISOString().split('T')[0];
             return (
-              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative">
+              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative flex flex-col">
                 {dayJobs.length === 0 ? (
                   <div className="text-sm text-gray-400 text-center mt-2">
                     Nessun lavoro
-                    <button
-                      onClick={() => {
-                        setSelectedDate(dayStr);
-                        setEditingJob(null);
-                        setShowModal(true);
-                      }}
-                      className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline block mx-auto"
-                    >
-                      + Aggiungi
-                    </button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1">
                     {dayJobs.map((job) => {
                       // Obtener clientId del job o buscarlo por nombre
                       const jobClientId = job.clientId || clients.find(c => c.name === job.client)?.id || '';
@@ -614,6 +604,18 @@ export default function CalendarTabNew() {
                     })}
                   </div>
                 )}
+                {/* Botón de agregar evento siempre visible al final de cada día */}
+                <button
+                  onClick={() => {
+                    setSelectedDate(dayStr);
+                    setEditingJob(null);
+                    setShowModal(true);
+                  }}
+                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded border border-blue-200 w-full"
+                  title={`Aggiungi evento per ${dayStr}`}
+                >
+                  + Aggiungi Evento
+                </button>
               </div>
             );
           })}
@@ -681,6 +683,13 @@ function EventModal({
     isSpecialCase: false,
   });
 
+  // Actualizar fecha cuando cambia initialDate (cuando se hace clic desde un día específico)
+  useEffect(() => {
+    if (initialDate && !job) {
+      // Solo actualizar si no estamos editando un job existente
+      setFormData(prev => ({ ...prev, date: initialDate }));
+    }
+  }, [initialDate, job]);
 
   useEffect(() => {
     if (job) {
