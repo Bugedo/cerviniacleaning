@@ -26,22 +26,28 @@ export default function ManualHoursModal({
   const [manualHours, setManualHours] = useState<ManualHour[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
-  const [hours, setHours] = useState(''); // Formato HH:MM
+  const [hours, setHours] = useState('00'); // Horas (0-23)
+  const [minutes, setMinutes] = useState('00'); // Minutos (0, 15, 30, 45)
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Convertir horas decimales a formato HH:MM
   const decimalToTime = (decimalHours: number): string => {
-    const hours = Math.floor(decimalHours);
-    const minutes = Math.round((decimalHours - hours) * 60);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    const h = Math.floor(decimalHours);
+    const m = Math.round((decimalHours - h) * 60);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
   // Convertir formato HH:MM a horas decimales
   const timeToDecimal = (timeStr: string): number => {
     if (!timeStr || !timeStr.includes(':')) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours + minutes / 60;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h + m / 60;
+  };
+
+  // Obtener el valor HH:MM actual
+  const getTimeValue = (): string => {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   };
 
   useEffect(() => {
@@ -65,20 +71,22 @@ export default function ManualHoursModal({
   };
 
   const handleSave = async () => {
-    if (!selectedDate || !hours) {
+    if (!selectedDate || !hours || !minutes) {
       alert('Per favore, compila data e ore');
       return;
     }
 
+    const timeValue = getTimeValue();
+    
     // Validar formato HH:MM
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(hours)) {
+    if (!timeRegex.test(timeValue)) {
       alert('Per favore, inserisci un formato valido (HH:MM), es: 04:45');
       return;
     }
 
     // Convertir HH:MM a horas decimales para enviar a la API
-    const decimalHours = timeToDecimal(hours);
+    const decimalHours = timeToDecimal(timeValue);
     if (decimalHours <= 0) {
       alert('Le ore devono essere maggiori di 0');
       return;
@@ -106,7 +114,7 @@ export default function ManualHoursModal({
         body: JSON.stringify({
           resourceId,
           date: selectedDate,
-          hours: hours, // Enviar formato HH:MM
+          hours: timeValue, // Enviar formato HH:MM
           notes: notes.trim() || undefined,
         }),
       });
@@ -115,7 +123,8 @@ export default function ManualHoursModal({
 
       await fetchManualHours();
       setSelectedDate('');
-      setHours('');
+      setHours('00');
+      setMinutes('00');
       setNotes('');
       setEditingId(null);
       onSave();
@@ -146,8 +155,11 @@ export default function ManualHoursModal({
   const handleEdit = (mh: ManualHour) => {
     setEditingId(mh.id);
     setSelectedDate(mh.date);
-    // Convertir horas decimales a formato HH:MM para editar
-    setHours(decimalToTime(mh.hours));
+    // Convertir horas decimales a formato HH:MM y separar en horas y minutos
+    const timeStr = decimalToTime(mh.hours);
+    const [h, m] = timeStr.split(':');
+    setHours(h);
+    setMinutes(m);
     setNotes(mh.notes || '');
   };
 
@@ -183,18 +195,42 @@ export default function ManualHoursModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ore Lavorate * (HH:MM)</label>
-            <input
-              type="time"
-              step="900"
-              value={hours}
-              onChange={(e) => setHours(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              placeholder="Es: 04:45"
-              required
-              min="00:00"
-              max="23:59"
-            />
-            <p className="text-xs text-gray-500 mt-1">Formato 24h: HH:MM (es: 04:45 = 4h 45min, intervali di 15 minuti)</p>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1">
+                <label className="block text-xs text-gray-600 mb-1">Ore (0-23)</label>
+                <select
+                  value={hours}
+                  onChange={(e) => setHours(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  required
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={String(i).padStart(2, '0')}>
+                      {String(i).padStart(2, '0')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <span className="text-xl font-bold text-gray-700 mt-6">:</span>
+              <div className="flex-1">
+                <label className="block text-xs text-gray-600 mb-1">Minuti (0, 15, 30, 45)</label>
+                <select
+                  value={minutes}
+                  onChange={(e) => setMinutes(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  required
+                >
+                  {['00', '15', '30', '45'].map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Formato 24h: {getTimeValue()} = {Math.floor(parseInt(hours) + parseInt(minutes) / 60)}h {minutes}min
+            </p>
           </div>
 
           <div>
@@ -214,7 +250,8 @@ export default function ManualHoursModal({
                 onClick={() => {
                   setEditingId(null);
                   setSelectedDate('');
-                  setHours('');
+                  setHours('00');
+                  setMinutes('00');
                   setNotes('');
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
