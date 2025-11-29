@@ -27,15 +27,37 @@ export async function GET(request: Request) {
       const manualHoursData = await getSpreadsheetData(config.sheets.resources, 'Ore Manuali!A:E');
       const rows = manualHoursData.slice(1); // Excluir header
 
+      // Función para convertir HH:MM a horas decimales
+      const timeToDecimal = (timeStr: string): number => {
+        if (!timeStr || typeof timeStr !== 'string') {
+          // Si es un número (formato antiguo), devolverlo como está
+          const num = parseFloat(timeStr);
+          if (!isNaN(num)) return num;
+          return 0;
+        }
+        if (!timeStr.includes(':')) {
+          // Si no tiene ':', intentar parsear como número
+          const num = parseFloat(timeStr);
+          return isNaN(num) ? 0 : num;
+        }
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours + minutes / 60;
+      };
+
       let manualHours: ManualHour[] = rows
         .filter((row) => row[0] && row[1] && row[2] && row[3]) // Filtrar filas vacías
-        .map((row) => ({
-          id: row[0] || '',
-          resourceId: row[1] || '',
-          date: row[2] || '',
-          hours: parseFloat(row[3] || '0'),
-          notes: row[4] || '',
-        }));
+        .map((row) => {
+          const hoursValue = row[3] || '0';
+          // Convertir HH:MM o número a decimal para cálculos
+          const decimalHours = timeToDecimal(hoursValue);
+          return {
+            id: row[0] || '',
+            resourceId: row[1] || '',
+            date: row[2] || '',
+            hours: decimalHours,
+            notes: row[4] || '',
+          };
+        });
 
       // Filtrar por resourceId si se proporciona
       if (resourceId) {
@@ -70,6 +92,33 @@ export async function POST(request: Request) {
         { error: 'resourceId, date y hours son requeridos' },
         { status: 400 },
       );
+    }
+
+    // Validar y normalizar el formato de horas
+    // Acepta tanto HH:MM como números decimales (para compatibilidad)
+    let hoursValue: string;
+    if (typeof hours === 'string' && hours.includes(':')) {
+      // Formato HH:MM - validar y usar directamente
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(hours)) {
+        return NextResponse.json(
+          { error: 'Formato de horas inválido. Use HH:MM (ej: 04:45)' },
+          { status: 400 },
+        );
+      }
+      hoursValue = hours;
+    } else {
+      // Formato decimal - convertir a HH:MM
+      const decimalHours = typeof hours === 'number' ? hours : parseFloat(hours);
+      if (isNaN(decimalHours) || decimalHours < 0) {
+        return NextResponse.json(
+          { error: 'Horas inválidas' },
+          { status: 400 },
+        );
+      }
+      const h = Math.floor(decimalHours);
+      const m = Math.round((decimalHours - h) * 60);
+      hoursValue = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
 
     const config = getSheetsConfig();
@@ -135,7 +184,7 @@ export async function POST(request: Request) {
       // Actualizar fila existente (mantener el ID existente)
       const existingId = manualHoursData[existingRowIndex][0];
       const rowNumber = existingRowIndex + 1;
-      const updatedRow = [existingId, resourceId, date, hours.toString(), notes || ''];
+      const updatedRow = [existingId, resourceId, date, hoursValue, notes || ''];
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: config.sheets.resources,
@@ -153,7 +202,7 @@ export async function POST(request: Request) {
       });
     } else {
       // Agregar nueva fila
-      const newRow = [nextId, resourceId, date, hours.toString(), notes || ''];
+      const newRow = [nextId, resourceId, date, hoursValue, notes || ''];
       await appendSpreadsheetData(config.sheets.resources, 'Ore Manuali!A:E', [newRow]);
 
       return NextResponse.json({

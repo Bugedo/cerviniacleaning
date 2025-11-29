@@ -87,20 +87,17 @@ export default function ResourcesTab() {
     return `${months[parseInt(monthNum) - 1]} ${year}`;
   };
 
+  // Convertir horas decimales a formato HH:MM
+  const decimalToTime = (decimalHours: number): string => {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
   const formatHours = (hours: string | number): string => {
     const hoursNum = typeof hours === 'string' ? parseFloat(hours || '0') : hours;
-    if (isNaN(hoursNum) || hoursNum === 0) return '0h';
-    
-    const wholeHours = Math.floor(hoursNum);
-    const minutes = Math.round((hoursNum - wholeHours) * 60);
-    
-    if (minutes === 0) {
-      return `${wholeHours}h`;
-    } else if (minutes === 30) {
-      return `${wholeHours}h e mezza`;
-    } else {
-      return `${wholeHours}h ${minutes}min`;
-    }
+    if (isNaN(hoursNum) || hoursNum === 0) return '00:00';
+    return decimalToTime(hoursNum);
   };
 
   const formatDate = (dateStr: string): string => {

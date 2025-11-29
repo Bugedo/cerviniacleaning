@@ -26,9 +26,23 @@ export default function ManualHoursModal({
   const [manualHours, setManualHours] = useState<ManualHour[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
-  const [hours, setHours] = useState('');
+  const [hours, setHours] = useState(''); // Formato HH:MM
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Convertir horas decimales a formato HH:MM
+  const decimalToTime = (decimalHours: number): string => {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  // Convertir formato HH:MM a horas decimales
+  const timeToDecimal = (timeStr: string): number => {
+    if (!timeStr || !timeStr.includes(':')) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours + minutes / 60;
+  };
 
   useEffect(() => {
     fetchManualHours();
@@ -51,8 +65,22 @@ export default function ManualHoursModal({
   };
 
   const handleSave = async () => {
-    if (!selectedDate || !hours || parseFloat(hours) <= 0) {
+    if (!selectedDate || !hours) {
       alert('Per favore, compila data e ore');
+      return;
+    }
+
+    // Validar formato HH:MM
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(hours)) {
+      alert('Per favore, inserisci un formato valido (HH:MM), es: 04:45');
+      return;
+    }
+
+    // Convertir HH:MM a horas decimales para enviar a la API
+    const decimalHours = timeToDecimal(hours);
+    if (decimalHours <= 0) {
+      alert('Le ore devono essere maggiori di 0');
       return;
     }
 
@@ -69,6 +97,7 @@ export default function ManualHoursModal({
       }
 
       // Crear o actualizar la entrada (la API maneja la actualización si ya existe para esa fecha)
+      // Enviamos el formato HH:MM para que la API lo convierta
       const response = await fetch('/api/manual-hours', {
         method: 'POST',
         headers: {
@@ -77,7 +106,7 @@ export default function ManualHoursModal({
         body: JSON.stringify({
           resourceId,
           date: selectedDate,
-          hours: parseFloat(hours),
+          hours: hours, // Enviar formato HH:MM
           notes: notes.trim() || undefined,
         }),
       });
@@ -117,7 +146,8 @@ export default function ManualHoursModal({
   const handleEdit = (mh: ManualHour) => {
     setEditingId(mh.id);
     setSelectedDate(mh.date);
-    setHours(mh.hours.toString());
+    // Convertir horas decimales a formato HH:MM para editar
+    setHours(decimalToTime(mh.hours));
     setNotes(mh.notes || '');
   };
 
@@ -152,17 +182,17 @@ export default function ManualHoursModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ore *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ore * (HH:MM)</label>
             <input
-              type="number"
-              step="0.5"
-              min="0"
+              type="time"
+              step="900"
               value={hours}
               onChange={(e) => setHours(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              placeholder="Es: 2.5"
+              placeholder="Es: 04:45"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">Formato: HH:MM (es: 04:45 = 4h 45min)</p>
           </div>
 
           <div>
@@ -226,7 +256,7 @@ export default function ManualHoursModal({
                       <tr key={mh.id} className="hover:bg-gray-50">
                         <td className="px-3 py-2 text-xs text-gray-900">{formatDate(mh.date)}</td>
                         <td className="px-3 py-2 text-xs text-gray-900 font-semibold">
-                          {mh.hours}h
+                          {decimalToTime(mh.hours)}
                         </td>
                         <td className="px-3 py-2 text-xs text-gray-500">{mh.notes || '-'}</td>
                         <td className="px-3 py-2 text-xs">
