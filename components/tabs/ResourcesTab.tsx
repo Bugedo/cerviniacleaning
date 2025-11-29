@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import ManualHoursModal from '@/components/ManualHoursModal';
 
 interface Job {
   id: string;
@@ -9,6 +10,14 @@ interface Job {
   endTime: string;
   propertyName: string;
   client: string;
+}
+
+interface ManualHour {
+  id: string;
+  resourceId: string;
+  date: string;
+  hours: number;
+  notes: string;
 }
 
 interface Resource {
@@ -24,6 +33,8 @@ interface Resource {
   jobs: Job[];
   weeklyHours: Record<string, number>;
   monthlyHours: Record<string, number>;
+  manualHours?: ManualHour[];
+  isCoordinatorOnly?: boolean;
 }
 
 export default function ResourcesTab() {
@@ -31,19 +42,25 @@ export default function ResourcesTab() {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [expandedResource, setExpandedResource] = useState<string | null>(null);
+  const [showManualHoursModal, setShowManualHoursModal] = useState(false);
+  const [selectedResourceForManualHours, setSelectedResourceForManualHours] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchResources();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth]);
 
-  const fetchResources = async () => {
+  const fetchResources = async (forceRefresh = false) => {
     try {
       setLoading(true);
       const url = selectedMonth
         ? `/api/resources?month=${selectedMonth}`
         : '/api/resources';
-      const response = await fetch(url);
+      
+      // Si se fuerza refresh, agregar timestamp para evitar caché
+      const fetchUrl = forceRefresh ? `${url}?_t=${Date.now()}` : url;
+      
+      const response = await fetch(fetchUrl);
       if (!response.ok) throw new Error('Error al cargar recursos');
       const data = await response.json();
       setResources(data.resources || []);
@@ -131,6 +148,13 @@ export default function ResourcesTab() {
             <option value="">Tutti i mesi</option>
             <option value={getCurrentMonth()}>Mese corrente</option>
           </select>
+          <button
+            onClick={() => fetchResources(true)}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+            title="Ricarica dati"
+          >
+            🔄 Aggiorna
+          </button>
         </div>
       </div>
 
@@ -194,58 +218,153 @@ export default function ResourcesTab() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => setExpandedResource(isExpanded ? null : resource.id)}
-                        className="text-blue-600 hover:text-blue-800 underline"
-                      >
-                        {isExpanded ? 'Nascondi' : 'Dettagli'}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setExpandedResource(isExpanded ? null : resource.id)}
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {isExpanded ? 'Nascondi' : 'Dettagli'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedResourceForManualHours({
+                              id: resource.id,
+                              name: `${resource.name} ${resource.surname}`,
+                            });
+                            setShowManualHoursModal(true);
+                          }}
+                          className="text-green-600 hover:text-green-800 underline"
+                          title="Aggiungi ore manuali"
+                        >
+                          + Ore Manuali
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {isExpanded && (
                     <tr>
                       <td colSpan={7} className="px-6 py-4 bg-gray-50">
                         <div className="space-y-4">
-                          {/* Eventos */}
-                          <div>
-                            <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                              Eventi ({resource.jobs.length})
-                            </h4>
-                            {resource.jobs.length > 0 ? (
+                          {/* Horas Manuales - Mostrar primero para coordinadores */}
+                          {resource.isCoordinatorOnly && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                                Ore Manuali ({resource.manualHours?.length || 0})
+                              </h4>
+                              {resource.manualHours && resource.manualHours.length > 0 ? (
+                                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-100">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ore</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Dettaglio</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {resource.manualHours
+                                        .sort((a, b) => b.date.localeCompare(a.date))
+                                        .map((mh) => (
+                                          <tr key={mh.id} className="hover:bg-gray-50">
+                                            <td className="px-3 py-2 text-xs text-gray-900">
+                                              {formatDate(mh.date)}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-gray-900 font-semibold">
+                                              {formatHours(mh.hours)}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-gray-500">
+                                              {mh.notes || '-'}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-500">Nessuna ora manuale registrata</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Eventos - Solo para no coordinadores */}
+                          {!resource.isCoordinatorOnly && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                                Eventi ({resource.jobs.length})
+                              </h4>
+                              {resource.jobs.length > 0 ? (
+                                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-100">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ora</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Proprietà</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Cliente</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {resource.jobs.map((job) => (
+                                        <tr key={job.id} className="hover:bg-gray-50">
+                                          <td className="px-3 py-2 text-xs text-gray-900">
+                                            {formatDate(job.date)}
+                                          </td>
+                                          <td className="px-3 py-2 text-xs text-gray-500">
+                                            {job.startTime} - {job.endTime}
+                                          </td>
+                                          <td className="px-3 py-2 text-xs text-gray-500">
+                                            {job.propertyName}
+                                          </td>
+                                          <td className="px-3 py-2 text-xs text-gray-500">
+                                            {job.client}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-500">Nessun evento</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Horas Manuales - Para empleados normales (además de eventos) */}
+                          {!resource.isCoordinatorOnly && resource.manualHours && resource.manualHours.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                                Ore Manuali Aggiuntive ({resource.manualHours.length})
+                              </h4>
                               <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
                                 <table className="min-w-full divide-y divide-gray-200">
                                   <thead className="bg-gray-100">
                                     <tr>
                                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
-                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ora</th>
-                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Proprietà</th>
-                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Cliente</th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ore</th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Dettaglio</th>
                                     </tr>
                                   </thead>
                                   <tbody className="bg-white divide-y divide-gray-200">
-                                    {resource.jobs.map((job) => (
-                                      <tr key={job.id} className="hover:bg-gray-50">
-                                        <td className="px-3 py-2 text-xs text-gray-900">
-                                          {formatDate(job.date)}
-                                        </td>
-                                        <td className="px-3 py-2 text-xs text-gray-500">
-                                          {job.startTime} - {job.endTime}
-                                        </td>
-                                        <td className="px-3 py-2 text-xs text-gray-500">
-                                          {job.propertyName}
-                                        </td>
-                                        <td className="px-3 py-2 text-xs text-gray-500">
-                                          {job.client}
-                                        </td>
-                                      </tr>
-                                    ))}
+                                    {resource.manualHours
+                                      .sort((a, b) => b.date.localeCompare(a.date))
+                                      .map((mh) => (
+                                        <tr key={mh.id} className="hover:bg-gray-50">
+                                          <td className="px-3 py-2 text-xs text-gray-900">
+                                            {formatDate(mh.date)}
+                                          </td>
+                                          <td className="px-3 py-2 text-xs text-gray-900 font-semibold">
+                                            {formatHours(mh.hours)}
+                                          </td>
+                                          <td className="px-3 py-2 text-xs text-gray-500">
+                                            {mh.notes || '-'}
+                                          </td>
+                                        </tr>
+                                      ))}
                                   </tbody>
                                 </table>
                               </div>
-                            ) : (
-                              <p className="text-sm text-gray-500">Nessun evento</p>
-                            )}
-                          </div>
+                            </div>
+                          )}
 
                           {/* Ore per settimana */}
                           <div>
@@ -303,6 +422,20 @@ export default function ResourcesTab() {
         <div className="mt-4 text-sm text-gray-600">
           Mostrando dati per: <strong>{formatMonth(selectedMonth)}</strong>
         </div>
+      )}
+
+      {showManualHoursModal && selectedResourceForManualHours && (
+        <ManualHoursModal
+          resourceId={selectedResourceForManualHours.id}
+          resourceName={selectedResourceForManualHours.name}
+          onClose={() => {
+            setShowManualHoursModal(false);
+            setSelectedResourceForManualHours(null);
+          }}
+          onSave={() => {
+            fetchResources();
+          }}
+        />
       )}
     </div>
   );

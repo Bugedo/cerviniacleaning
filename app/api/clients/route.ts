@@ -9,7 +9,7 @@ export async function GET() {
     // Intentar leer configuración de sheets
     let config;
     let useGoogleSheets = false;
-    
+
     try {
       config = getSheetsConfig();
       useGoogleSheets = true;
@@ -117,7 +117,9 @@ export async function GET() {
         const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
         const getField = (fieldName: string): string => {
-          const row = data.find((row: unknown[]) => row[0] && row[0].toString().includes(fieldName));
+          const row = data.find(
+            (row: unknown[]) => row[0] && row[0].toString().includes(fieldName),
+          );
           return row ? (row[1] || '').toString() : '';
         };
 
@@ -128,7 +130,7 @@ export async function GET() {
         const nomeReferente = getField('Nome referente agenzia');
         const contattoReferente = getField('Contatto referente');
         const contattoPortineria = getField('Contatto portineria');
-        const infoAccesso = getField('Informazioni per l\'Accesso');
+        const infoAccesso = getField("Informazioni per l'Accesso");
         const ingressoStabile = getField('Ingresso stabile');
         const chiavi = getField('Chiavi');
         const linkMaps = getField('Link a Google Maps');
@@ -141,7 +143,7 @@ export async function GET() {
         const lavastoviglie = getField('Lavastoviglie');
         const lettiMatrimoniali = getField('Letti matrimoniali');
         const lettiSingoli = getField('Letti singoli');
-        const lettiIngleseItaliana = getField('Letti all\'inglese/italiana');
+        const lettiIngleseItaliana = getField("Letti all'inglese/italiana");
         const bagni = getField('Bagni');
 
         if (cliente && !clientsMap.has(cliente)) {
@@ -198,9 +200,6 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching clients:', error);
     const errorMessage = error instanceof Error ? error.message : 'Error al obtener clientes';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

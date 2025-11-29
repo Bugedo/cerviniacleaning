@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { getGoogleSheetsClient, getSpreadsheetData } from '@/lib/googleSheets';
 import { getSheetsConfig } from '@/lib/sheetsConfig';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: propertyId } = await params;
     const body = await request.json();
@@ -18,21 +15,18 @@ export async function PUT(
 
     // Leer todas las propiedades para encontrar la fila correcta
     const propertiesData = await getSpreadsheetData(clientsSheetId, 'Proprietà!A:AA');
-    
+
     // Encontrar el índice de la propiedad (header + índice)
     const propertyIndex = propertiesData.findIndex((row) => row[0] === propertyId);
-    
+
     if (propertyIndex === -1) {
-      return NextResponse.json(
-        { error: 'Proprietà non trovata' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Proprietà non trovata' }, { status: 404 });
     }
 
     // Mapear los campos del body a las columnas del sheet
     // Orden de columnas: ID, ID Cliente, Nome Cliente, Nome Proprietario, Location, ...
     const rowIndex = propertyIndex + 1; // +1 porque las filas en Sheets empiezan en 1
-    
+
     // Mapeo de campos a índices de columna (0-based, pero en Sheets API es 1-based)
     const fieldMap: Record<string, number> = {
       ownerName: 3,
@@ -62,7 +56,7 @@ export async function PUT(
 
     // Actualizar cada campo individualmente
     const updates: Array<{ range: string; values: string[][] }> = [];
-    
+
     Object.keys(body).forEach((key) => {
       if (fieldMap[key] !== undefined) {
         const colIndex = fieldMap[key];
@@ -90,11 +84,8 @@ export async function PUT(
     return NextResponse.json({ success: true, message: 'Proprietà aggiornata con successo' });
   } catch (error) {
     console.error('Error updating property:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Errore nell\'aggiornamento della proprietà';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Errore nell'aggiornamento della proprietà";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-

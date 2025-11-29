@@ -27,7 +27,12 @@
     "update-monte-rosa": "tsx scripts/update-property-monte-rosa.ts",
     "update-montblanc-breithron": "tsx scripts/update-properties-montblanc-breithron.ts",
     "add-comments": "tsx scripts/add-comments-field.ts",
-    "add-comment": "tsx scripts/add-comment.ts"
+    "add-comment": "tsx scripts/add-comment.ts",
+    "migrate-calendar-clientid": "tsx scripts/migrate-calendar-clientid.ts",
+    "unify-cervino": "tsx scripts/unify-cervino-clients.ts",
+    "update-ab13": "tsx scripts/update-ab13-client.ts",
+    "clear-resources": "tsx scripts/clear-resources-from-events.ts",
+    "update-gabriel-role": "tsx scripts/update-gabriel-role.ts"
   },
   "repository": {
     "type": "git",

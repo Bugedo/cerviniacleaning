@@ -42,19 +42,6 @@ interface ResourceManagerProps {
   onUpdate: () => void;
 }
 
-function calculateHours(startTime: string, endTime: string): number {
-  if (!startTime || !endTime) return 0;
-  
-  const [startHour, startMin] = startTime.split(':').map(Number);
-  const [endHour, endMin] = endTime.split(':').map(Number);
-  
-  const startMinutes = startHour * 60 + startMin;
-  const endMinutes = endHour * 60 + endMin;
-  
-  const diffMinutes = endMinutes - startMinutes;
-  return diffMinutes / 60;
-}
-
 export default function ResourceManager({ job, onUpdate }: ResourceManagerProps) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -81,10 +68,19 @@ export default function ResourceManager({ job, onUpdate }: ResourceManagerProps)
       setResources(current);
     }
     setEditingIndex(null);
-  }, [job.id, job.resource1Id, job.resource2Id, job.resource3Id, job.resource4Id, job.resource5Id, job.resource6Id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    job.id,
+    job.resource1Id,
+    job.resource2Id,
+    job.resource3Id,
+    job.resource4Id,
+    job.resource5Id,
+    job.resource6Id,
+  ]);
 
   const currentResources = getCurrentResources();
-  const selectedResourceIds = currentResources.map(r => r.id).filter(Boolean);
+  const selectedResourceIds = currentResources.map((r) => r.id).filter(Boolean);
 
   const handleResourceSelect = async (index: number, resourceId: string, resourceName: string) => {
     // Actualizar estado local
@@ -105,7 +101,7 @@ export default function ResourceManager({ job, onUpdate }: ResourceManagerProps)
       });
 
       if (!response.ok) throw new Error('Error al guardar');
-      
+
       await onUpdate();
     } catch (error) {
       console.error('Error saving resource:', error);
@@ -113,7 +109,7 @@ export default function ResourceManager({ job, onUpdate }: ResourceManagerProps)
       // Revertir cambios
       setResources(getCurrentResources());
     }
-    
+
     setEditingIndex(null);
   };
 
@@ -153,7 +149,7 @@ export default function ResourceManager({ job, onUpdate }: ResourceManagerProps)
       // Actualizar estado local
       const updated = resources.filter((_, i) => i !== index);
       setResources(updated.length > 0 ? updated : [{ id: '', name: '' }]);
-      
+
       await onUpdate();
     } catch (error) {
       console.error('Error removing resource:', error);
@@ -177,7 +173,7 @@ export default function ResourceManager({ job, onUpdate }: ResourceManagerProps)
                   resourceId={resource.id || ''}
                   onSelect={(id, name) => handleResourceSelect(index, id, name)}
                   placeholder="Cerca dipendente..."
-                  excludedResourceIds={selectedResourceIds.filter(id => id !== resource.id)}
+                  excludedResourceIds={selectedResourceIds.filter((id) => id !== resource.id)}
                 />
                 <button
                   onClick={() => setEditingIndex(null)}
@@ -221,4 +217,3 @@ export default function ResourceManager({ job, onUpdate }: ResourceManagerProps)
     </div>
   );
 }
-

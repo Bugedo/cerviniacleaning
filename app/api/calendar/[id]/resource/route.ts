@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { getGoogleSheetsClient, getSpreadsheetData } from '@/lib/googleSheets';
 import { getSheetsConfig } from '@/lib/sheetsConfig';
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: jobId } = await params;
     const body = await request.json();
@@ -14,7 +11,7 @@ export async function DELETE(
     if (!resourceIndex || !resourceId) {
       return NextResponse.json(
         { error: 'resourceIndex y resourceId son requeridos' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,12 +21,9 @@ export async function DELETE(
 
     const calendarData = await getSpreadsheetData(calendarSheetId, 'Calendario!A:AF');
     const jobIndex = calendarData.findIndex((row) => row[0] === jobId);
-    
+
     if (jobIndex === -1) {
-      return NextResponse.json(
-        { error: 'Lavoro non trovato' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Lavoro non trovato' }, { status: 404 });
     }
 
     const rowIndex = jobIndex + 1;
@@ -103,17 +97,14 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Risorsa rimossa con successo',
     });
   } catch (error) {
     console.error('Error removing resource:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Errore nella rimozione della risorsa';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : 'Errore nella rimozione della risorsa';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-

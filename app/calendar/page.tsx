@@ -1,6 +1,5 @@
-import CalendarTab from '@/components/tabs/CalendarTab';
+import CalendarTabNew from '@/components/tabs/CalendarTabNew';
 
 export default function CalendarPage() {
-  return <CalendarTab />;
+  return <CalendarTabNew />;
 }
-

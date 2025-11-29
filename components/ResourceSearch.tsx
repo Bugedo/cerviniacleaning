@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Resource {
   id: string;
@@ -10,11 +10,11 @@ interface Resource {
 }
 
 interface ResourceSearchProps {
-  value: string; // resourceName actual
-  resourceId: string; // resourceId actual
-  onSelect: (resourceId: string, resourceName: string) => void;
+  value: string;
+  resourceId: string;
+  onSelect: (id: string, name: string) => void;
   placeholder?: string;
-  excludedResourceIds?: string[]; // IDs de recursos ya seleccionados en este trabajo
+  excludedResourceIds?: string[];
 }
 
 export default function ResourceSearch({
@@ -24,68 +24,60 @@ export default function ResourceSearch({
   placeholder = 'Cerca dipendente...',
   excludedResourceIds = [],
 }: ResourceSearchProps) {
-  const [resources, setResources] = useState<Resource[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
-  const searchRef = useRef<HTMLDivElement>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchResources();
   }, []);
 
-  useEffect(() => {
-    // Filtrar recursos excluidos (excepto el actual si está seleccionado)
-    const availableResources = resources.filter((resource) => {
-      // Si es el recurso actual, siempre incluirlo
-      if (resource.id === resourceId) return true;
-      // Excluir recursos ya seleccionados
-      return !excludedResourceIds.includes(resource.id);
-    });
-
-    if (searchTerm.trim() === '') {
-      setFilteredResources(availableResources);
-    } else {
-      const filtered = availableResources.filter((resource) => {
-        const fullName = `${resource.name} ${resource.surname}`.toLowerCase();
-        return fullName.includes(searchTerm.toLowerCase());
-      });
-      setFilteredResources(filtered);
-    }
-  }, [searchTerm, resources, excludedResourceIds, resourceId]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   const fetchResources = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/resources');
       if (!response.ok) throw new Error('Error al cargar recursos');
       const data = await response.json();
-      
-      // Filtrar solo empleados que NO son coordinadores
-      const employees = (data.resources || []).filter(
-        (resource: Resource) => resource.role !== 'Coordinatore'
+      const allResources = data.resources || [];
+
+      // Filtrar coordinadores y asistentes coordinadores, y excluir los ya seleccionados
+      const availableResources = allResources.filter(
+        (r: Resource) =>
+          r.role !== 'Coordinatore' &&
+          r.role !== 'Assistente Coordinatore' &&
+          !excludedResourceIds.includes(r.id)
       );
-      
-      setResources(employees);
-      setFilteredResources(employees);
+
+      setResources(availableResources);
+      setFilteredResources(availableResources);
     } catch (error) {
       console.error('Error fetching resources:', error);
-      setResources([]);
-      setFilteredResources([]);
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredResources(
+        resources.filter(
+          (r) => !excludedResourceIds.includes(r.id)
+        )
+      );
+    } else {
+      const term = searchTerm.toLowerCase();
+      const filtered = resources.filter(
+        (r) =>
+          !excludedResourceIds.includes(r.id) &&
+          (`${r.name} ${r.surname}`.toLowerCase().includes(term) ||
+            r.name.toLowerCase().includes(term) ||
+            r.surname.toLowerCase().includes(term))
+      );
+      setFilteredResources(filtered);
+    }
+  }, [searchTerm, resources, excludedResourceIds]);
 
   const handleSelect = (resource: Resource) => {
     const fullName = `${resource.name} ${resource.surname}`.trim();
@@ -94,27 +86,21 @@ export default function ResourceSearch({
     setShowDropdown(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setShowDropdown(true);
-  };
-
-  const handleInputFocus = () => {
-    setShowDropdown(true);
-  };
-
   return (
-    <div ref={searchRef} className="relative w-full">
+    <div className="relative flex-1">
       <input
         type="text"
-        value={showDropdown ? searchTerm : value || ''}
-        onChange={handleInputChange}
-        onFocus={handleInputFocus}
+        value={searchTerm || value}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setShowDropdown(true);
+        }}
+        onFocus={() => setShowDropdown(true)}
         placeholder={placeholder}
-        className="w-full px-1 py-0.5 text-xs border border-gray-300 rounded"
+        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
       {showDropdown && filteredResources.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-40 overflow-y-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-40 overflow-y-auto">
           {filteredResources.map((resource) => {
             const fullName = `${resource.name} ${resource.surname}`.trim();
             return (
@@ -122,7 +108,7 @@ export default function ResourceSearch({
                 key={resource.id}
                 type="button"
                 onClick={() => handleSelect(resource)}
-                className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100"
               >
                 {fullName}
               </button>
@@ -130,12 +116,11 @@ export default function ResourceSearch({
           })}
         </div>
       )}
-      {showDropdown && filteredResources.length === 0 && searchTerm.trim() !== '' && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg">
-          <div className="px-2 py-1 text-xs text-gray-500">Nessun risultato</div>
+      {showDropdown && filteredResources.length === 0 && searchTerm && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg p-2 text-xs text-gray-500">
+          Nessun risultato
         </div>
       )}
     </div>
   );
 }
-

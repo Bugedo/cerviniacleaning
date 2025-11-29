@@ -21,17 +21,27 @@ interface Job {
   resource5Name: string;
   resource6Id: string;
   resource6Name: string;
+  resource7Id?: string;
+  resource7Name?: string;
+  resource8Id?: string;
+  resource8Name?: string;
+  resource9Id?: string;
+  resource9Name?: string;
+  resource10Id?: string;
+  resource10Name?: string;
+  resource11Id?: string;
+  resource11Name?: string;
 }
 
 function calculateHours(startTime: string, endTime: string): number {
   if (!startTime || !endTime) return 0;
-  
+
   const [startHour, startMin] = startTime.split(':').map(Number);
   const [endHour, endMin] = endTime.split(':').map(Number);
-  
+
   const startMinutes = startHour * 60 + startMin;
   const endMinutes = endHour * 60 + endMin;
-  
+
   const diffMinutes = endMinutes - startMinutes;
   return diffMinutes / 60;
 }
@@ -69,69 +79,189 @@ export async function GET(request: Request) {
       active: row[6] || '',
     }));
 
-    // Leer calendario para calcular horas y eventos
-    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:Z');
+    // Leer horas manuales con detalles
+    let manualHours: Array<{
+      id: string;
+      resourceId: string;
+      date: string;
+      hours: number;
+      notes: string;
+    }> = [];
+    try {
+      const manualHoursData = await getSpreadsheetData(config.sheets.resources, 'Ore Manuali!A:E');
+      const manualHoursRows = manualHoursData.slice(1);
+      manualHours = manualHoursRows
+        .filter((row) => row[1] && row[2] && row[3])
+        .map((row) => ({
+          id: row[0] || '',
+          resourceId: row[1] || '',
+          date: row[2] || '',
+          hours: parseFloat(row[3] || '0'),
+          notes: row[4] || '',
+        }));
+    } catch {
+      // Si la hoja no existe, continuar sin horas manuales
+      console.log('Hoja "Ore Manuali" no existe aún');
+    }
+
+    // Identificar coordinadores que solo usan horas manuales
+    // Incluye: Coordinatore, Assistente Coordinatore
+    const coordinatorOnlyIds = new Set<string>();
+    resources.forEach((resource) => {
+      const role = (resource.role || '').toLowerCase();
+      const fullName = `${resource.name} ${resource.surname}`.trim().toLowerCase();
+
+      // Por rol
+      if (
+        role.includes('coordinatore') ||
+        role.includes('coordinador') ||
+        role.includes('assistente coordinatore') ||
+        role.includes('asistente coordinador')
+      ) {
+        coordinatorOnlyIds.add(resource.id);
+      }
+
+      // Por nombre (por si acaso)
+      if (
+        ((fullName.includes('nicolas') || fullName.includes('nicolás')) &&
+          fullName.includes('bugedo')) ||
+        ((fullName.includes('gabriel') || fullName.includes('gabriele')) &&
+          fullName.includes('gioria'))
+      ) {
+        coordinatorOnlyIds.add(resource.id);
+      }
+    });
+
+    // Leer calendario para calcular horas y eventos (hasta columna AG para incluir 11 recursos)
+    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:AG');
     const calendarRows = calendarData.slice(1);
 
     const jobs: Job[] = calendarRows
       .filter((row) => row[5] === 'Lavoro') // Solo trabajos, no supervisiones
-      .map((row) => ({
-        id: row[0] || '',
-        date: row[1] || '',
-        startTime: row[3] || '',
-        endTime: row[4] || '',
-        propertyName: row[8] || '',
-        client: row[9] || '',
-        resource1Id: row[10] || '',
-        resource1Name: row[11] || '',
-        resource2Id: row[12] || '',
-        resource2Name: row[13] || '',
-        resource3Id: row[14] || '',
-        resource3Name: row[15] || '',
-        resource4Id: row[16] || '',
-        resource4Name: row[17] || '',
-        resource5Id: row[18] || '',
-        resource5Name: row[19] || '',
-        resource6Id: row[20] || '',
-        resource6Name: row[21] || '',
-      }));
+      .map((row) => {
+        const job: Job = {
+          id: row[0] || '',
+          date: row[1] || '',
+          startTime: row[3] || '',
+          endTime: row[4] || '',
+          propertyName: row[8] || '',
+          client: row[9] || '',
+          resource1Id: '',
+          resource1Name: '',
+          resource2Id: '',
+          resource2Name: '',
+          resource3Id: '',
+          resource3Name: '',
+          resource4Id: '',
+          resource4Name: '',
+          resource5Id: '',
+          resource5Name: '',
+          resource6Id: '',
+          resource6Name: '',
+        };
+
+        // Agregar recursos 1-11 (empiezan en índice 11, después de clientId en índice 10)
+        for (let i = 1; i <= 11; i++) {
+          const idIndex = 10 + (i - 1) * 2 + 1; // 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+          const nameIndex = 10 + (i - 1) * 2 + 2; // 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32
+          const resourceId = (row[idIndex] || '') as string;
+          const resourceName = (row[nameIndex] || '') as string;
+          
+          if (i === 1) {
+            job.resource1Id = resourceId;
+            job.resource1Name = resourceName;
+          } else if (i === 2) {
+            job.resource2Id = resourceId;
+            job.resource2Name = resourceName;
+          } else if (i === 3) {
+            job.resource3Id = resourceId;
+            job.resource3Name = resourceName;
+          } else if (i === 4) {
+            job.resource4Id = resourceId;
+            job.resource4Name = resourceName;
+          } else if (i === 5) {
+            job.resource5Id = resourceId;
+            job.resource5Name = resourceName;
+          } else if (i === 6) {
+            job.resource6Id = resourceId;
+            job.resource6Name = resourceName;
+          } else if (i === 7) {
+            job.resource7Id = resourceId;
+            job.resource7Name = resourceName;
+          } else if (i === 8) {
+            job.resource8Id = resourceId;
+            job.resource8Name = resourceName;
+          } else if (i === 9) {
+            job.resource9Id = resourceId;
+            job.resource9Name = resourceName;
+          } else if (i === 10) {
+            job.resource10Id = resourceId;
+            job.resource10Name = resourceName;
+          } else if (i === 11) {
+            job.resource11Id = resourceId;
+            job.resource11Name = resourceName;
+          }
+        }
+
+        return job;
+      });
 
     // Calcular horas y eventos para cada recurso
     const resourcesWithHours = resources.map((resource) => {
       const resourceJobs: Job[] = [];
       let totalHours = 0;
-      let weeklyHours: Record<string, number> = {};
-      let monthlyHours: Record<string, number> = {};
+      const weeklyHours: Record<string, number> = {};
+      const monthlyHours: Record<string, number> = {};
+      const isCoordinatorOnly = coordinatorOnlyIds.has(resource.id);
 
-      // Buscar todos los trabajos donde participa este recurso
-      jobs.forEach((job) => {
-        let isInJob = false;
-        const hours = calculateHours(job.startTime, job.endTime);
+      // Solo buscar trabajos del calendario si NO es coordinador que solo usa horas manuales
+      if (!isCoordinatorOnly) {
+        jobs.forEach((job) => {
+          let isInJob = false;
+          const hours = calculateHours(job.startTime, job.endTime);
 
-        // Verificar si el recurso está en alguna posición (1-6)
-        for (let i = 1; i <= 6; i++) {
-          const resourceId = job[`resource${i}Id` as keyof Job] as string;
-          if (resourceId === resource.id) {
-            isInJob = true;
-            break;
+          // Verificar si el recurso está en alguna posición (1-11)
+          for (let i = 1; i <= 11; i++) {
+            const resourceId = job[`resource${i}Id` as keyof Job] as string;
+            if (resourceId === resource.id) {
+              isInJob = true;
+              break;
+            }
           }
-        }
 
-        if (isInJob) {
-          // Filtrar por mes si se especifica
-          if (!month || getMonthStart(job.date) === month) {
-            resourceJobs.push(job);
-            totalHours += hours;
+          if (isInJob) {
+            // Filtrar por mes si se especifica
+            if (!month || getMonthStart(job.date) === month) {
+              resourceJobs.push(job);
+              totalHours += hours;
 
-            // Calcular horas por semana
-            const weekStart = getWeekStart(new Date(job.date));
-            weeklyHours[weekStart] = (weeklyHours[weekStart] || 0) + hours;
+              // Calcular horas por semana
+              const weekStart = getWeekStart(new Date(job.date));
+              weeklyHours[weekStart] = (weeklyHours[weekStart] || 0) + hours;
 
-            // Calcular horas por mes
-            const monthStart = getMonthStart(job.date);
-            monthlyHours[monthStart] = (monthlyHours[monthStart] || 0) + hours;
+              // Calcular horas por mes
+              const monthStart = getMonthStart(job.date);
+              monthlyHours[monthStart] = (monthlyHours[monthStart] || 0) + hours;
+            }
           }
-        }
+        });
+      }
+
+      // Agregar horas manuales (siempre, para todos)
+      const resourceManualHours = manualHours.filter(
+        (mh) => mh.resourceId === resource.id && (!month || getMonthStart(mh.date) === month),
+      );
+
+      resourceManualHours.forEach((mh) => {
+        totalHours += mh.hours;
+
+        // Calcular horas por semana
+        const weekStart = getWeekStart(new Date(mh.date));
+        weeklyHours[weekStart] = (weeklyHours[weekStart] || 0) + mh.hours;
+
+        // Calcular horas por mes
+        const monthStart = getMonthStart(mh.date);
+        monthlyHours[monthStart] = (monthlyHours[monthStart] || 0) + mh.hours;
       });
 
       return {
@@ -141,6 +271,8 @@ export async function GET(request: Request) {
         jobs: resourceJobs,
         weeklyHours,
         monthlyHours,
+        manualHours: resourceManualHours, // Incluir horas manuales con detalles
+        isCoordinatorOnly, // Indicar si es coordinador que solo usa horas manuales
       };
     });
 
@@ -154,4 +286,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
