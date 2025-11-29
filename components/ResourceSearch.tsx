@@ -19,7 +19,6 @@ interface ResourceSearchProps {
 
 export default function ResourceSearch({
   value,
-  resourceId,
   onSelect,
   placeholder = 'Cerca dipendente...',
   excludedResourceIds = [],
@@ -28,15 +27,9 @@ export default function ResourceSearch({
   const [resources, setResources] = useState<Resource[]>([]);
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchResources();
-  }, []);
 
   const fetchResources = async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/resources');
       if (!response.ok) throw new Error('Error al cargar recursos');
       const data = await response.json();
@@ -54,10 +47,14 @@ export default function ResourceSearch({
       setFilteredResources(availableResources);
     } catch (error) {
       console.error('Error fetching resources:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchResources();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
