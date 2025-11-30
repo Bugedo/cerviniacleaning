@@ -86,6 +86,10 @@ export async function POST(request: Request) {
       cleaningType,
       resources,
       isSpecialCase,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
     } = body;
 
     if (!date) {
