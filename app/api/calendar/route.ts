@@ -9,11 +9,12 @@ export async function GET(request: Request) {
 
     const config = getSheetsConfig();
 
-    // Leer datos del calendario (ahora con más columnas incluyendo clientId)
-    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:AG');
+    // Leer datos del calendario (ahora incluyendo check-in y check-out)
+    // Columnas: A-AK (0-36) = básicos + recursos + check-in/out
+    const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:AK');
     const rows = calendarData.slice(1);
 
-    // Procesar datos (hasta 11 recursos)
+    // Procesar datos (hasta 11 recursos + check-in/out)
     const jobs = rows.map((row) => {
       const job: Record<string, string> = {
         id: row[0] || '',
@@ -27,13 +28,17 @@ export async function GET(request: Request) {
         propertyName: row[8] || '',
         client: row[9] || '',
         clientId: row[10] || '', // clientId después del nombre del cliente
-        coordinatorId: row[22] || '',
-        hoursWorked: row[23] || '',
-        status: row[24] || '',
-        notes: row[25] || '',
+        coordinatorId: row[32] || '',
+        hoursWorked: row[33] || '',
+        status: row[34] || '',
+        notes: row[35] || '',
+        checkInDate: row[36] || '',
+        checkInTime: row[37] || '',
+        checkOutDate: row[38] || '',
+        checkOutTime: row[39] || '',
       };
 
-      // Agregar recursos 1-11 (ahora empiezan en índice 11 en lugar de 10)
+      // Agregar recursos 1-11 (empiezan en índice 11)
       for (let i = 1; i <= 11; i++) {
         const idIndex = 10 + (i - 1) * 2 + 1; // 11, 13, 15, etc.
         const nameIndex = 10 + (i - 1) * 2 + 2; // 12, 14, 16, etc.
@@ -175,9 +180,13 @@ export async function POST(request: Request) {
       '', // hoursWorked
       'Pianificato',
       isSpecialCase ? 'Caso Speciale' : '', // Nota especial para casos especiales
+      checkInDate || '', // Check-in Date
+      checkInTime || '', // Check-in Time
+      checkOutDate || '', // Check-out Date
+      checkOutTime || '', // Check-out Time
     ];
 
-    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:AG', [newJob]);
+    await appendSpreadsheetData(config.sheets.calendar, 'Calendario!A:AK', [newJob]);
 
     return NextResponse.json({
       success: true,

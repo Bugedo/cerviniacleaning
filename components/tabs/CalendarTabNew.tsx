@@ -42,6 +42,10 @@ interface Job {
   hoursWorked: string;
   status: string;
   notes: string;
+  checkInDate?: string;
+  checkInTime?: string;
+  checkOutDate?: string;
+  checkOutTime?: string;
 }
 
 interface Client {
@@ -282,6 +286,10 @@ export default function CalendarTabNew() {
     cleaningType: string;
     resources?: Array<{ id: string; name: string }>;
     isSpecialCase?: boolean;
+    checkInDate?: string;
+    checkInTime?: string;
+    checkOutDate?: string;
+    checkOutTime?: string;
   }) => {
     try {
       const weekStart = getWeekStart(new Date(formData.date));
@@ -300,6 +308,10 @@ export default function CalendarTabNew() {
           cleaningType: formData.cleaningType,
           resources: formData.resources || [],
           isSpecialCase: formData.isSpecialCase,
+          checkInDate: formData.checkInDate,
+          checkInTime: formData.checkInTime,
+          checkOutDate: formData.checkOutDate,
+          checkOutTime: formData.checkOutTime,
         },
         cacheKey,
         (data, response, current) => {
@@ -366,6 +378,10 @@ export default function CalendarTabNew() {
     cleaningType?: string;
     resources?: Array<{ id: string; name: string }>;
     isSpecialCase?: boolean;
+    checkInDate?: string;
+    checkInTime?: string;
+    checkOutDate?: string;
+    checkOutTime?: string;
   }) => {
     try {
       const updateData: Record<string, string> = {};
@@ -374,6 +390,10 @@ export default function CalendarTabNew() {
       if (formData.startTime) updateData.startTime = formData.startTime;
       if (formData.endTime) updateData.endTime = formData.endTime;
       if (formData.cleaningType !== undefined) updateData.cleaningType = formData.cleaningType;
+      if (formData.checkInDate !== undefined) updateData.checkInDate = formData.checkInDate;
+      if (formData.checkInTime !== undefined) updateData.checkInTime = formData.checkInTime;
+      if (formData.checkOutDate !== undefined) updateData.checkOutDate = formData.checkOutDate;
+      if (formData.checkOutTime !== undefined) updateData.checkOutTime = formData.checkOutTime;
       
       // Manejar casos especiales vs casos normales
       if (formData.isSpecialCase) {
@@ -622,6 +642,27 @@ export default function CalendarTabNew() {
                               </div>
                             )}
                           </div>
+
+                          {/* Check-in / Check-out */}
+                          {(job.checkInDate || job.checkOutDate) && (
+                            <div className="mt-2 pt-2 border-t border-gray-300">
+                              <div className="text-xs font-medium text-gray-700 mb-1">Check-in / Check-out:</div>
+                              {job.checkInDate && (
+                                <div className="text-xs text-gray-600">
+                                  <span className="font-medium">Check-in:</span>{' '}
+                                  {new Date(job.checkInDate).toLocaleDateString('it-IT')}
+                                  {job.checkInTime && ` alle ${formatTime(job.checkInTime)}`}
+                                </div>
+                              )}
+                              {job.checkOutDate && (
+                                <div className="text-xs text-gray-600">
+                                  <span className="font-medium">Check-out:</span>{' '}
+                                  {new Date(job.checkOutDate).toLocaleDateString('it-IT')}
+                                  {job.checkOutTime && ` alle ${formatTime(job.checkOutTime)}`}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -679,6 +720,10 @@ function EventModal({
     cleaningType?: string;
     resources?: Array<{ id: string; name: string }>;
     isSpecialCase?: boolean;
+    checkInDate?: string;
+    checkInTime?: string;
+    checkOutDate?: string;
+    checkOutTime?: string;
   }) => void;
 }) {
   const [formData, setFormData] = useState({
@@ -692,6 +737,10 @@ function EventModal({
     cleaningType: job?.cleaningType || '',
     selectedResources: [] as Array<{ id: string; name: string }>,
     isSpecialCase: false,
+    checkInDate: job?.checkInDate || '',
+    checkInTime: job?.checkInTime || '',
+    checkOutDate: job?.checkOutDate || '',
+    checkOutTime: job?.checkOutTime || '',
   });
 
   // Actualizar fecha cuando cambia initialDate (cuando se hace clic desde un día específico)
@@ -1029,6 +1078,57 @@ function EventModal({
                   + Aggiungi dipendente
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Check-in y Check-out */}
+          <div className="border-t pt-4 mt-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Check-in / Check-out (opzionale)</h4>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Check-in
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={formData.checkInDate}
+                    onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Data check-in"
+                  />
+                  <input
+                    type="time"
+                    value={formData.checkInTime}
+                    onChange={(e) => setFormData({ ...formData, checkInTime: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Ora check-in"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Check-out
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={formData.checkOutDate}
+                    onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Data check-out"
+                  />
+                  <input
+                    type="time"
+                    value={formData.checkOutTime}
+                    onChange={(e) => setFormData({ ...formData, checkOutTime: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Ora check-out"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

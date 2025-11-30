@@ -12,8 +12,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const calendarSheetId = config.sheets.calendar;
     const sheets = await getGoogleSheetsClient();
 
-    // Leer todos los trabajos para encontrar la fila correcta (hasta columna AG para 11 recursos + clientId)
-    const calendarData = await getSpreadsheetData(calendarSheetId, 'Calendario!A:AG');
+    // Leer todos los trabajos para encontrar la fila correcta (hasta columna AK para 11 recursos + check-in/out)
+    const calendarData = await getSpreadsheetData(calendarSheetId, 'Calendario!A:AK');
 
     // Encontrar el índice del trabajo (header + índice)
     const jobIndex = calendarData.findIndex((row) => row[0] === jobId);
@@ -62,7 +62,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const resourcesData = await getSpreadsheetData(config.sheets.resources, 'Risorse!A:G');
     const resourcesRows = resourcesData.slice(1);
 
-    // Mapeo de campos a índices de columna (hasta 11 recursos)
+    // Mapeo de campos a índices de columna (hasta 11 recursos + check-in/out)
     const fieldMap: Record<string, number> = {
       date: 1, // Data (columna B)
       day: 2, // Giorno (columna C)
@@ -71,9 +71,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       propertyId: 7, // ID Proprietà (columna H)
       propertyName: 8, // Nome Proprietà (columna I)
       client: 9, // Cliente (columna J)
-      clientId: 10, // ID Cliente (columna K) - NUEVO
+      clientId: 10, // ID Cliente (columna K)
       cleaningType: 6, // Tipo di Pulizia (columna G)
-      notes: 25, // Note (columna Z)
+      notes: 35, // Note (después de recursos)
+      checkInDate: 36, // Check-in Date
+      checkInTime: 37, // Check-in Time
+      checkOutDate: 38, // Check-out Date
+      checkOutTime: 39, // Check-out Time
     };
 
     // Agregar mapeo para recursos 1-11 (ahora empiezan en índice 11)
