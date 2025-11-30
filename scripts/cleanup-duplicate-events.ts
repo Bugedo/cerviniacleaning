@@ -17,15 +17,15 @@ async function cleanupDuplicateEvents() {
     const spreadsheet = await sheets.spreadsheets.get({
       spreadsheetId: calendarSheetId,
     });
-    
-    const calendarSheet = spreadsheet.data.sheets?.find(sheet => 
-      sheet.properties?.title === 'Calendario'
+
+    const calendarSheet = spreadsheet.data.sheets?.find(
+      (sheet) => sheet.properties?.title === 'Calendario',
     );
-    
+
     if (!calendarSheet?.properties?.sheetId) {
       throw new Error('No se encontró la hoja "Calendario"');
     }
-    
+
     const sheetId = calendarSheet.properties.sheetId;
 
     // Leer calendario
@@ -34,15 +34,18 @@ async function cleanupDuplicateEvents() {
     const rows = calendarData.slice(1);
 
     // Agrupar eventos por fecha y propiedad
-    const eventsByKey: Record<string, Array<{ rowIndex: number; id: string; cleaningType: string }>> = {};
-    
+    const eventsByKey: Record<
+      string,
+      Array<{ rowIndex: number; id: string; cleaningType: string }>
+    > = {};
+
     rows.forEach((row, index) => {
       const id = row[0]?.toString() || '';
       const date = row[1]?.toString() || '';
       const propertyId = row[7]?.toString() || '';
       const cleaningType = row[6]?.toString() || '';
       const type = row[5]?.toString() || '';
-      
+
       // Solo procesar trabajos (Lavoro)
       if (type === 'Lavoro' && date && propertyId) {
         const key = `${date}-${propertyId}`;
@@ -59,48 +62,58 @@ async function cleanupDuplicateEvents() {
 
     // Encontrar duplicados
     const rowsToDelete: number[] = [];
-    
+
     Object.entries(eventsByKey).forEach(([key, events]) => {
       if (events.length > 1) {
         const [date, propertyId] = key.split('-');
-        console.log(`\n⚠️  Duplicados encontrados: ${date} - Propiedad ${propertyId} (${events.length} eventos)`);
-        
+        console.log(
+          `\n⚠️  Duplicados encontrados: ${date} - Propiedad ${propertyId} (${events.length} eventos)`,
+        );
+
         // Separar por tipo de limpieza
-        const profondaEvents = events.filter(e => e.cleaningType === 'Profonda');
-        const repassoEvents = events.filter(e => e.cleaningType === 'Repasso');
-        const sinTipoEvents = events.filter(e => !e.cleaningType || e.cleaningType === '');
-        
+        const profondaEvents = events.filter((e) => e.cleaningType === 'Profonda');
+        const repassoEvents = events.filter((e) => e.cleaningType === 'Repasso');
+        const sinTipoEvents = events.filter((e) => !e.cleaningType || e.cleaningType === '');
+
         // Si hay Profonda y Repasso, mantener solo Profonda
         if (profondaEvents.length > 0 && repassoEvents.length > 0) {
-          console.log(`   ✅ Mantener Profonda (${profondaEvents.length}), eliminar Repasso (${repassoEvents.length})`);
-          repassoEvents.forEach(event => {
+          console.log(
+            `   ✅ Mantener Profonda (${profondaEvents.length}), eliminar Repasso (${repassoEvents.length})`,
+          );
+          repassoEvents.forEach((event) => {
             rowsToDelete.push(event.rowIndex);
             console.log(`   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (Repasso)`);
           });
         }
-        
+
         // Si hay múltiples del mismo tipo, mantener solo el primero
         if (profondaEvents.length > 1) {
           console.log(`   ⚠️  Múltiples Profonda, mantener solo el primero`);
-          profondaEvents.slice(1).forEach(event => {
+          profondaEvents.slice(1).forEach((event) => {
             rowsToDelete.push(event.rowIndex);
-            console.log(`   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (Profonda duplicado)`);
+            console.log(
+              `   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (Profonda duplicado)`,
+            );
           });
         }
-        
+
         if (repassoEvents.length > 1 && profondaEvents.length === 0) {
           console.log(`   ⚠️  Múltiples Repasso, mantener solo el primero`);
-          repassoEvents.slice(1).forEach(event => {
+          repassoEvents.slice(1).forEach((event) => {
             rowsToDelete.push(event.rowIndex);
-            console.log(`   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (Repasso duplicado)`);
+            console.log(
+              `   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (Repasso duplicado)`,
+            );
           });
         }
-        
+
         if (sinTipoEvents.length > 1) {
           console.log(`   ⚠️  Múltiples sin tipo, mantener solo el primero`);
-          sinTipoEvents.slice(1).forEach(event => {
+          sinTipoEvents.slice(1).forEach((event) => {
             rowsToDelete.push(event.rowIndex);
-            console.log(`   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (sin tipo duplicado)`);
+            console.log(
+              `   🗑️  Eliminar: Fila ${event.rowIndex} - ID ${event.id} (sin tipo duplicado)`,
+            );
           });
         }
       }
@@ -115,9 +128,9 @@ async function cleanupDuplicateEvents() {
 
     // Eliminar filas (de mayor a menor para no afectar índices)
     const sortedRows = [...rowsToDelete].sort((a, b) => b - a);
-    
+
     // Agrupar todas las eliminaciones en una sola operación batch
-    const deleteRequests = sortedRows.map(rowIndex => ({
+    const deleteRequests = sortedRows.map((rowIndex) => ({
       deleteDimension: {
         range: {
           sheetId: sheetId,
@@ -138,11 +151,13 @@ async function cleanupDuplicateEvents() {
           requests: batch,
         },
       });
-      console.log(`✅ Batch ${Math.floor(i / batchSize) + 1}: ${batch.length} fila(s) eliminada(s)`);
-      
+      console.log(
+        `✅ Batch ${Math.floor(i / batchSize) + 1}: ${batch.length} fila(s) eliminada(s)`,
+      );
+
       // Pequeño delay entre batches para evitar rate limiting
       if (i + batchSize < deleteRequests.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
@@ -155,4 +170,3 @@ async function cleanupDuplicateEvents() {
 }
 
 cleanupDuplicateEvents();
-

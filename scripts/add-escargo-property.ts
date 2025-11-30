@@ -11,7 +11,7 @@ async function addEscargoProperty() {
     const clientsData = await getSpreadsheetData(config.sheets.clients, 'Clienti!A:Z');
     const clientsRows = clientsData.slice(1);
 
-    const andreaBruzzo = clientsRows.find(row => row[1] === 'Andrea Bruzzo');
+    const andreaBruzzo = clientsRows.find((row) => row[1] === 'Andrea Bruzzo');
     if (!andreaBruzzo) {
       console.log('❌ No se encontró el cliente "Andrea Bruzzo"');
       return;
@@ -26,7 +26,7 @@ async function addEscargoProperty() {
 
     // Encontrar el siguiente ID disponible
     let maxId = 0;
-    propertiesRows.forEach(row => {
+    propertiesRows.forEach((row) => {
       const id = parseInt(row[0] || '0');
       if (id > maxId) maxId = id;
     });
@@ -37,30 +37,30 @@ async function addEscargoProperty() {
     // Crear nueva propiedad Escargo
     // Estructura: ID, ID Cliente, Nome Cliente, Nome Proprietario, Location, ...
     const newProperty = [
-      nextPropertyId,           // ID
-      clientId,                 // ID Cliente
-      'Andrea Bruzzo',          // Nome Cliente
-      '',                       // Nome Proprietario
-      'Escargo',                // Location
-      '',                       // Tipologia Locale
-      '',                       // Nome Referente Agenzia
-      '',                       // Contatto Referente
-      '',                       // Contatto Portineria
-      '',                       // Informazioni Accesso
-      '',                       // Ingresso Stabile
-      '',                       // Chiavi
-      '',                       // Link Google Maps
-      '',                       // Servizi e Dettagli
-      '',                       // Kit di Benvenuto
-      '',                       // Presenza Parcheggio
-      '',                       // Note Speciali
-      '',                       // Tempistiche
-      '',                       // Lavatrice
-      '',                       // Lavastoviglie
-      '',                       // Letti Matrimoniali
-      '',                       // Letti Singoli
-      '',                       // Letti Inglese/Italiana
-      '',                       // Bagni
+      nextPropertyId, // ID
+      clientId, // ID Cliente
+      'Andrea Bruzzo', // Nome Cliente
+      '', // Nome Proprietario
+      'Escargo', // Location
+      '', // Tipologia Locale
+      '', // Nome Referente Agenzia
+      '', // Contatto Referente
+      '', // Contatto Portineria
+      '', // Informazioni Accesso
+      '', // Ingresso Stabile
+      '', // Chiavi
+      '', // Link Google Maps
+      '', // Servizi e Dettagli
+      '', // Kit di Benvenuto
+      '', // Presenza Parcheggio
+      '', // Note Speciali
+      '', // Tempistiche
+      '', // Lavatrice
+      '', // Lavastoviglie
+      '', // Letti Matrimoniali
+      '', // Letti Singoli
+      '', // Letti Inglese/Italiana
+      '', // Bagni
     ];
 
     await appendSpreadsheetData(config.sheets.clients, 'Proprietà!A:Z', [newProperty]);
@@ -77,4 +77,3 @@ async function addEscargoProperty() {
 }
 
 addEscargoProperty();
-

@@ -4,13 +4,13 @@ import { getSheetsConfig } from '../lib/sheetsConfig';
 // Simular la lógica exacta de la API
 function calculateHours(startTime: string, endTime: string): number {
   if (!startTime || !endTime) return 0;
-  
+
   const [startHour, startMin] = startTime.split(':').map(Number);
   const [endHour, endMin] = endTime.split(':').map(Number);
-  
+
   const startMinutes = startHour * 60 + startMin;
   const endMinutes = endHour * 60 + endMin;
-  
+
   const diffMinutes = endMinutes - startMinutes;
   return diffMinutes / 60;
 }
@@ -48,7 +48,7 @@ async function testResourcesAPI() {
       active: row[6] || '',
     }));
 
-    const aylen = resources.find(r => r.id === '3');
+    const aylen = resources.find((r) => r.id === '3');
     if (!aylen) {
       console.log('❌ No se encontró Aylen');
       return;
@@ -104,13 +104,13 @@ async function testResourcesAPI() {
       if (isInJob) {
         const jobMonth = getMonthStart(job.date);
         const shouldInclude = !month || jobMonth === month;
-        
+
         console.log(`   📋 Evento ${job.id} (${job.date}):`);
         console.log(`      Horas: ${hours}h`);
         console.log(`      Mes del evento: ${jobMonth}`);
         console.log(`      Mes filtro: ${month || 'todos'}`);
         console.log(`      ¿Incluir? ${shouldInclude ? '✅ SÍ' : '❌ NO'}`);
-        
+
         if (shouldInclude) {
           aylenJobs.push({
             job,
@@ -124,17 +124,17 @@ async function testResourcesAPI() {
 
     console.log(`\n📊 Resumen para Aylen:`);
     console.log(`   Total de eventos encontrados: ${aylenJobs.length}`);
-    
+
     let totalHours = 0;
     const weeklyHours: Record<string, number> = {};
     const monthlyHours: Record<string, number> = {};
 
     aylenJobs.forEach(({ job, hours, month: jobMonth }) => {
       totalHours += hours;
-      
+
       const weekStart = getWeekStart(new Date(job.date));
       weeklyHours[weekStart] = (weeklyHours[weekStart] || 0) + hours;
-      
+
       monthlyHours[jobMonth] = (monthlyHours[jobMonth] || 0) + hours;
     });
 
@@ -145,7 +145,7 @@ async function testResourcesAPI() {
       .forEach(([week, hours]) => {
         console.log(`      ${week}: ${hours.toFixed(2)}h`);
       });
-    
+
     console.log(`\n   Horas por mes:`);
     Object.entries(monthlyHours)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -170,4 +170,3 @@ async function testResourcesAPI() {
 }
 
 testResourcesAPI();
-

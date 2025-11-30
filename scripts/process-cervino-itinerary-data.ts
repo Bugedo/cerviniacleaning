@@ -15,18 +15,18 @@ function parseDate(dateStr: string): string {
   const parts = dateStr.split('/');
   const day = Number(parts[0]);
   const month = Number(parts[1]);
-  
+
   // Si el mes es 1 (enero), es 2026 (año siguiente)
   // Si el mes es >= 11 (noviembre) o <= 12 (diciembre), es 2025
   const year = month === 1 ? 2026 : 2025;
-  
+
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 // Mapear nombres de propiedades a nombres consistentes
 function normalizePropertyName(condominio: string, code: string): string {
   const condominioLower = condominio.toLowerCase();
-  
+
   if (condominioLower.includes('piccolo') || condominioLower.includes('rod')) {
     return `Condominio Piccolo Rododendro ${code}`;
   }
@@ -51,7 +51,7 @@ function normalizePropertyName(condominio: string, code: string): string {
   if (condominioLower.includes('saint') || condominioLower.includes('theodule')) {
     return `Saint Theodule ${code}`;
   }
-  
+
   return `${condominio} ${code}`;
 }
 
@@ -66,7 +66,13 @@ async function processCervinoItineraryData() {
     // Reservas extraídas del PDF
     const reservations: Reservation[] = [
       { property: 'PICCOLO RODODENDRO', code: 'Q427', checkin: '26/11', checkout: '30/11' },
-      { property: 'CRETES BLANCHES', code: 'Q403', checkin: '26/11', checkout: '30/11', notes: 'SI PUO\' PULIRE DAL 24/11' },
+      {
+        property: 'CRETES BLANCHES',
+        code: 'Q403',
+        checkin: '26/11',
+        checkout: '30/11',
+        notes: "SI PUO' PULIRE DAL 24/11",
+      },
       { property: 'BREUIL', code: 'Q456', checkin: '28/11', checkout: '5/12' },
       { property: 'MONTABEL', code: 'M112', checkin: '1/12', checkout: '16/12' },
       { property: 'SAINT THEODULE', code: 'T382', checkin: '1/12', checkout: '6/12' },
@@ -114,7 +120,7 @@ async function processCervinoItineraryData() {
 
     // Primero, crear/identificar todas las propiedades únicas
     const uniqueProperties = new Map<string, { name: string; code: string }>();
-    
+
     reservations.forEach((res) => {
       const normalizedName = normalizePropertyName(res.property, res.code);
       if (!uniqueProperties.has(res.code)) {
@@ -133,12 +139,13 @@ async function processCervinoItineraryData() {
         const location = row[4]?.toString() || '';
         const client = row[2]?.toString() || '';
         const rowCode = row[24]?.toString() || '';
-        
+
         if (client === cervinoClientName) {
           const codeMatch = rowCode === code;
-          const locationMatch = location.toLowerCase().includes(propInfo.name.toLowerCase()) ||
-                               location.toLowerCase().includes(code.toLowerCase());
-          
+          const locationMatch =
+            location.toLowerCase().includes(propInfo.name.toLowerCase()) ||
+            location.toLowerCase().includes(code.toLowerCase());
+
           if (codeMatch || locationMatch) {
             propertyId = row[0]?.toString() || '';
             propertyExists = true;
@@ -169,10 +176,14 @@ async function processCervinoItineraryData() {
 
         newProperties.push(newProperty);
         propertyMap.set(code, propertyId);
-        console.log(`   ✅ Propiedad creada: ${propInfo.name} (ID: ${propertyId}, código: ${code})`);
+        console.log(
+          `   ✅ Propiedad creada: ${propInfo.name} (ID: ${propertyId}, código: ${code})`,
+        );
       } else {
         propertyMap.set(code, propertyId);
-        console.log(`   ℹ️  Propiedad existente: ${propInfo.name} (ID: ${propertyId}, código: ${code})`);
+        console.log(
+          `   ℹ️  Propiedad existente: ${propInfo.name} (ID: ${propertyId}, código: ${code})`,
+        );
       }
     }
 
@@ -187,11 +198,11 @@ async function processCervinoItineraryData() {
       }
 
       const normalizedName = normalizePropertyName(reservation.property, reservation.code);
-      
+
       // Parsear fechas
       const checkinDateStr = parseDate(reservation.checkin);
       const checkoutDateStr = parseDate(reservation.checkout);
-      
+
       // Limpieza antes del check-in (día anterior al check-in)
       const checkinDate = new Date(checkinDateStr);
       const preCheckinDate = new Date(checkinDate);
@@ -210,7 +221,22 @@ async function processCervinoItineraryData() {
         propertyId,
         normalizedName,
         cervinoClientName,
-        '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
         `Limpieza antes de check-in (${checkinDateStr})${reservation.notes ? ' - ' + reservation.notes : ''}`,
       ];
       cleaningEvents.push(preCheckinEvent);
@@ -230,7 +256,22 @@ async function processCervinoItineraryData() {
         propertyId,
         normalizedName,
         cervinoClientName,
-        '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
         `Limpieza después de check-out (${checkoutDateStr})`,
       ];
       cleaningEvents.push(postCheckoutEvent);
@@ -261,4 +302,3 @@ async function processCervinoItineraryData() {
 }
 
 processCervinoItineraryData();
-

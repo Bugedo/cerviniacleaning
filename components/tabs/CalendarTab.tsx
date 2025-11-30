@@ -92,8 +92,18 @@ export default function CalendarTab() {
 
   const getMonthName = (date: Date): string => {
     const months = [
-      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+      'Gennaio',
+      'Febbraio',
+      'Marzo',
+      'Aprile',
+      'Maggio',
+      'Giugno',
+      'Luglio',
+      'Agosto',
+      'Settembre',
+      'Ottobre',
+      'Novembre',
+      'Dicembre',
     ];
     return months[date.getMonth()];
   };
@@ -140,7 +150,6 @@ export default function CalendarTab() {
     setCurrentWeek(newWeek);
   };
 
-
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
 
@@ -150,11 +159,11 @@ export default function CalendarTab() {
       });
 
       if (!response.ok) throw new Error('Error al eliminar');
-      
+
       setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
     } catch (error) {
       console.error('Error deleting job:', error);
-      alert('Errore nell\'eliminazione dell\'evento');
+      alert("Errore nell'eliminazione dell'evento");
     }
   };
 
@@ -169,7 +178,7 @@ export default function CalendarTab() {
   }) => {
     try {
       // Obtener nombres de cliente y propiedad
-      const client = clients.find(c => c.id === formData.clientId);
+      const client = clients.find((c) => c.id === formData.clientId);
       if (!client) {
         alert('Cliente non trovato');
         return;
@@ -192,28 +201,31 @@ export default function CalendarTab() {
       });
 
       if (!response.ok) throw new Error('Error al crear evento');
-      
+
       await fetchJobs();
       setShowCreateModal(false);
       setSelectedDate('');
     } catch (error) {
       console.error('Error creating job:', error);
-      alert('Errore nella creazione dell\'evento');
+      alert("Errore nella creazione dell'evento");
     }
   };
 
-  const handleEditJob = async (jobId: string, formData: {
-    date?: string;
-    startTime?: string;
-    endTime?: string;
-    propertyId?: string;
-    cleaningType?: string;
-    resources?: Array<{ id: string; name: string }>;
-  }) => {
+  const handleEditJob = async (
+    jobId: string,
+    formData: {
+      date?: string;
+      startTime?: string;
+      endTime?: string;
+      propertyId?: string;
+      cleaningType?: string;
+      resources?: Array<{ id: string; name: string }>;
+    },
+  ) => {
     try {
       // Preparar datos para actualizar
       const updateData: Record<string, string> = {};
-      
+
       if (formData.date) updateData.date = formData.date;
       if (formData.startTime) updateData.startTime = formData.startTime;
       if (formData.endTime) updateData.endTime = formData.endTime;
@@ -246,14 +258,17 @@ export default function CalendarTab() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error al actualizar: ${response.status} ${response.statusText}`);
+        throw new Error(
+          errorData.error || `Error al actualizar: ${response.status} ${response.statusText}`,
+        );
       }
-      
+
       await fetchJobs();
       setEditingJob(null);
     } catch (error) {
       console.error('Error updating job:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Errore nell\'aggiornamento dell\'evento';
+      const errorMessage =
+        error instanceof Error ? error.message : "Errore nell'aggiornamento dell'evento";
       alert(errorMessage);
     }
   };
@@ -279,7 +294,10 @@ export default function CalendarTab() {
           <p className="text-sm text-gray-600 mt-1">
             {getMonthName(weekDays[0])} {weekDays[0].getFullYear()}
             {weekDays[0].getMonth() !== weekDays[6].getMonth() && (
-              <> - {getMonthName(weekDays[6])} {weekDays[6].getFullYear()}</>
+              <>
+                {' '}
+                - {getMonthName(weekDays[6])} {weekDays[6].getFullYear()}
+              </>
             )}
           </p>
         </div>
@@ -326,7 +344,10 @@ export default function CalendarTab() {
             const dayJobs = getJobsForDay(day);
             const dayStr = day.toISOString().split('T')[0];
             return (
-              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative">
+              <div
+                key={dayIndex}
+                className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative"
+              >
                 {dayJobs.length === 0 ? (
                   <div className="text-sm text-gray-400 text-center mt-2">
                     Nessun lavoro
@@ -367,22 +388,18 @@ export default function CalendarTab() {
                           </div>
 
                           {/* Nombre de propiedad - solo lectura */}
-                          <div className="font-semibold mb-1">
-                            {job.propertyName || 'Lavoro'}
-                          </div>
+                          <div className="font-semibold mb-1">{job.propertyName || 'Lavoro'}</div>
 
                           {/* Cliente - solo lectura */}
                           {job.client && (
-                            <div className="text-xs text-gray-600 mb-1">
-                              Cliente: {job.client}
-                            </div>
+                            <div className="text-xs text-gray-600 mb-1">Cliente: {job.client}</div>
                           )}
 
                           {/* Fecha - solo lectura */}
                           <div className="text-gray-600 mb-1">
                             <span className="text-xs font-medium">Data:</span> {job.date}
                           </div>
-                          
+
                           {/* Tipo de limpieza - solo lectura */}
                           {job.cleaningType && (
                             <div className="text-xs font-medium text-gray-700 mb-1">
@@ -392,17 +409,23 @@ export default function CalendarTab() {
 
                           {/* Horario - solo lectura */}
                           <div className="text-gray-600 mb-2">
-                            <span className="text-xs font-medium">Inizio:</span> {formatTime(job.startTime) || '--:--'}
+                            <span className="text-xs font-medium">Inizio:</span>{' '}
+                            {formatTime(job.startTime) || '--:--'}
                             {' | '}
-                            <span className="text-xs font-medium">Fine:</span> {formatTime(job.endTime) || '--:--'}
+                            <span className="text-xs font-medium">Fine:</span>{' '}
+                            {formatTime(job.endTime) || '--:--'}
                           </div>
 
                           {/* Empleados - solo lectura */}
                           <div className="mt-2 pt-2 border-t border-gray-300">
-                            <div className="text-xs font-medium text-gray-700 mb-1">Dipendenti:</div>
+                            <div className="text-xs font-medium text-gray-700 mb-1">
+                              Dipendenti:
+                            </div>
                             <div className="space-y-1">
                               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((num) => {
-                                const resourceName = job[`resource${num}Name` as keyof Job] as string;
+                                const resourceName = job[
+                                  `resource${num}Name` as keyof Job
+                                ] as string;
                                 if (!resourceName) return null;
                                 return (
                                   <div key={num} className="text-xs text-gray-600">
@@ -439,10 +462,7 @@ export default function CalendarTab() {
             setEditingJob(null);
             setSelectedDate('');
           }}
-          onSubmit={editingJob 
-            ? (data) => handleEditJob(editingJob.id, data)
-            : handleCreateJob
-          }
+          onSubmit={editingJob ? (data) => handleEditJob(editingJob.id, data) : handleCreateJob}
         />
       )}
     </div>
@@ -471,7 +491,9 @@ function EventModal({
     resources?: Array<{ id: string; name: string }>;
   }) => void;
 }) {
-  const [resources, setResources] = useState<Array<{ id: string; name: string; surname: string; role: string }>>([]);
+  const [resources, setResources] = useState<
+    Array<{ id: string; name: string; surname: string; role: string }>
+  >([]);
   const [formData, setFormData] = useState({
     date: initialDate || job?.date || '',
     startTime: job?.startTime || '',
@@ -485,9 +507,9 @@ function EventModal({
   // Inicializar clientId cuando cambie job o clients
   useEffect(() => {
     if (job?.client && clients.length > 0) {
-      const client = clients.find(c => c.name === job.client);
+      const client = clients.find((c) => c.name === job.client);
       if (client) {
-        setFormData(prev => ({ ...prev, clientId: client.id }));
+        setFormData((prev) => ({ ...prev, clientId: client.id }));
       }
     }
   }, [job, clients]);
@@ -507,13 +529,13 @@ function EventModal({
           jobResources.push({ id: resourceId, name: resourceName });
         }
       }
-      setFormData(prev => ({ 
-        ...prev, 
-        selectedResources: jobResources.length > 0 ? jobResources : [{ id: '', name: '' }]
+      setFormData((prev) => ({
+        ...prev,
+        selectedResources: jobResources.length > 0 ? jobResources : [{ id: '', name: '' }],
       }));
     } else {
       // Si no hay job, empezar con un recurso vacío
-      setFormData(prev => {
+      setFormData((prev) => {
         if (prev.selectedResources.length === 0) {
           return { ...prev, selectedResources: [{ id: '', name: '' }] };
         }
@@ -528,15 +550,15 @@ function EventModal({
       if (!response.ok) throw new Error('Error al cargar recursos');
       const data = await response.json();
       // Filtrar solo empleados que NO son coordinadores ni asistentes coordinadores
-      const employees = (data.resources || []).filter(
-        (resource: { role: string }) => {
-          const role = (resource.role || '').toLowerCase();
-          return !role.includes('coordinatore') && 
-                 !role.includes('coordinador') &&
-                 !role.includes('assistente coordinatore') &&
-                 !role.includes('asistente coordinador');
-        }
-      );
+      const employees = (data.resources || []).filter((resource: { role: string }) => {
+        const role = (resource.role || '').toLowerCase();
+        return (
+          !role.includes('coordinatore') &&
+          !role.includes('coordinador') &&
+          !role.includes('assistente coordinatore') &&
+          !role.includes('asistente coordinador')
+        );
+      });
       setResources(employees);
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -544,21 +566,21 @@ function EventModal({
     }
   };
 
-  const selectedClient = clients.find(c => c.id === formData.clientId);
+  const selectedClient = clients.find((c) => c.id === formData.clientId);
   const availableProperties = selectedClient?.properties || [];
-  
+
   // Obtener IDs de recursos ya seleccionados para filtrar
   // Función para obtener recursos disponibles para un índice específico
   const getAvailableResourcesForIndex = (index: number) => {
     const selectedResourceIds = formData.selectedResources
-      .map((r, i) => i !== index ? r.id : '')
+      .map((r, i) => (i !== index ? r.id : ''))
       .filter(Boolean);
-    return resources.filter(r => !selectedResourceIds.includes(r.id));
+    return resources.filter((r) => !selectedResourceIds.includes(r.id));
   };
 
   const handleAddResource = () => {
     if (formData.selectedResources.length < 11) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         selectedResources: [...prev.selectedResources, { id: '', name: '' }],
       }));
@@ -566,21 +588,21 @@ function EventModal({
   };
 
   const handleResourceChange = (index: number, resourceId: string) => {
-    const resource = resources.find(r => r.id === resourceId);
+    const resource = resources.find((r) => r.id === resourceId);
     if (resource) {
       const fullName = `${resource.name} ${resource.surname}`.trim();
       const updated = [...formData.selectedResources];
       updated[index] = { id: resourceId, name: fullName };
-      setFormData(prev => ({ ...prev, selectedResources: updated }));
+      setFormData((prev) => ({ ...prev, selectedResources: updated }));
     }
   };
 
   const handleRemoveResource = (index: number) => {
     const updated = formData.selectedResources.filter((_, i) => i !== index);
     // Si no quedan recursos, agregar uno vacío
-    setFormData(prev => ({ 
-      ...prev, 
-      selectedResources: updated.length > 0 ? updated : [{ id: '', name: '' }]
+    setFormData((prev) => ({
+      ...prev,
+      selectedResources: updated.length > 0 ? updated : [{ id: '', name: '' }],
     }));
   };
 
@@ -592,21 +614,17 @@ function EventModal({
     }
     onSubmit({
       ...formData,
-      resources: formData.selectedResources.filter(r => r.id),
+      resources: formData.selectedResources.filter((r) => r.id),
     });
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-semibold mb-4">
-          {job ? 'Modifica Evento' : 'Nuovo Evento'}
-        </h3>
+        <h3 className="text-lg font-semibold mb-4">{job ? 'Modifica Evento' : 'Nuovo Evento'}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Data *</label>
             <input
               type="date"
               value={formData.date}
@@ -618,9 +636,7 @@ function EventModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ora Inizio
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ora Inizio</label>
               <input
                 type="time"
                 value={formData.startTime}
@@ -629,9 +645,7 @@ function EventModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ora Fine
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ora Fine</label>
               <input
                 type="time"
                 value={formData.endTime}
@@ -642,12 +656,12 @@ function EventModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cliente *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
             <select
               value={formData.clientId}
-              onChange={(e) => setFormData({ ...formData, clientId: e.target.value, propertyId: '' })}
+              onChange={(e) =>
+                setFormData({ ...formData, clientId: e.target.value, propertyId: '' })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               required
             >
@@ -661,9 +675,7 @@ function EventModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Proprietà *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Proprietà *</label>
             <select
               value={formData.propertyId}
               onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
@@ -681,9 +693,7 @@ function EventModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo di Pulizia
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo di Pulizia</label>
             <select
               value={formData.cleaningType}
               onChange={(e) => setFormData({ ...formData, cleaningType: e.target.value })}
@@ -696,9 +706,7 @@ function EventModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dipendenti
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dipendenti</label>
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
               {formData.selectedResources.map((resource, index) => {
                 const availableForThisIndex = getAvailableResourcesForIndex(index);
@@ -716,10 +724,8 @@ function EventModal({
                           {r.name} {r.surname}
                         </option>
                       ))}
-                      {resource.id && !availableForThisIndex.find(r => r.id === resource.id) && (
-                        <option value={resource.id}>
-                          {resource.name}
-                        </option>
+                      {resource.id && !availableForThisIndex.find((r) => r.id === resource.id) && (
+                        <option value={resource.id}>{resource.name}</option>
                       )}
                     </select>
                     <button

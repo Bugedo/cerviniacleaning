@@ -1,4 +1,8 @@
-import { getSpreadsheetData, updateSpreadsheetData, getGoogleSheetsClient } from '../lib/googleSheets';
+import {
+  getSpreadsheetData,
+  updateSpreadsheetData,
+  getGoogleSheetsClient,
+} from '../lib/googleSheets';
 import { getSheetsConfig } from '../lib/sheetsConfig';
 
 async function unifyCervinoClients() {
@@ -17,7 +21,7 @@ async function unifyCervinoClients() {
     clientsRows.forEach((row) => {
       const id = row[0] || '';
       const name = row[1] || '';
-      
+
       if (name.toLowerCase().includes('agenzia cervino')) {
         agenziaCervinoClient = { id, name };
       }
@@ -28,7 +32,9 @@ async function unifyCervinoClients() {
       return;
     }
 
-    console.log(`📌 Cliente a usar: "${agenziaCervinoClient.name}" (ID: ${agenziaCervinoClient.id})\n`);
+    console.log(
+      `📌 Cliente a usar: "${agenziaCervinoClient.name}" (ID: ${agenziaCervinoClient.id})\n`,
+    );
 
     const sheets = await getGoogleSheetsClient();
 
@@ -40,8 +46,10 @@ async function unifyCervinoClients() {
 
     propertiesRows.forEach((row, index) => {
       const propertyClientName = row[2] || ''; // Nome Cliente está en columna C
-      if (propertyClientName.toLowerCase().includes('il cervino') && 
-          !propertyClientName.toLowerCase().includes('agenzia')) {
+      if (
+        propertyClientName.toLowerCase().includes('il cervino') &&
+        !propertyClientName.toLowerCase().includes('agenzia')
+      ) {
         propertiesToUpdate.push({ rowIndex: index + 2 }); // +2 porque empieza en 1 y hay header
       }
     });
@@ -80,9 +88,11 @@ async function unifyCervinoClients() {
 
     calendarRows.forEach((row, index) => {
       const eventClientName = row[9] || ''; // Nombre Cliente está en columna J (índice 9)
-      
-      if (eventClientName.toLowerCase().includes('il cervino') && 
-          !eventClientName.toLowerCase().includes('agenzia')) {
+
+      if (
+        eventClientName.toLowerCase().includes('il cervino') &&
+        !eventClientName.toLowerCase().includes('agenzia')
+      ) {
         eventsToUpdate.push({ rowIndex: index + 2 }); // +2 porque empieza en 1 y hay header
       }
     });
@@ -115,7 +125,9 @@ async function unifyCervinoClients() {
 
     console.log('✅ Unificación completada exitosamente!');
     console.log(`\n📊 Resumen:`);
-    console.log(`   - Cliente unificado: "${agenziaCervinoClient.name}" (ID: ${agenziaCervinoClient.id})`);
+    console.log(
+      `   - Cliente unificado: "${agenziaCervinoClient.name}" (ID: ${agenziaCervinoClient.id})`,
+    );
     console.log(`   - Propiedades actualizadas: ${propertiesToUpdate.length}`);
     console.log(`   - Eventos actualizados: ${eventsToUpdate.length}`);
   } catch (error) {
@@ -125,4 +137,3 @@ async function unifyCervinoClients() {
 }
 
 unifyCervinoClients();
-

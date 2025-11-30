@@ -3,12 +3,12 @@ import { getGoogleDriveClient } from '../lib/googleSheets';
 async function listFolderFiles() {
   try {
     const FOLDER_ID = '13THeS4AnYGPf3RkLzFvDC-uWmPK6rai3';
-    
+
     console.log('📁 Listando archivos en la carpeta compartida...\n');
     console.log(`Carpeta ID: ${FOLDER_ID}\n`);
 
     const drive = await getGoogleDriveClient();
-    
+
     const response = await drive.files.list({
       q: `'${FOLDER_ID}' in parents and trashed=false`,
       fields: 'files(id, name, mimeType)',
@@ -16,7 +16,7 @@ async function listFolderFiles() {
 
     if (response.data.files && response.data.files.length > 0) {
       console.log(`✅ Encontrados ${response.data.files.length} archivos:\n`);
-      
+
       response.data.files.forEach((file) => {
         const isSheet = file.mimeType === 'application/vnd.google-apps.spreadsheet';
         console.log(`${isSheet ? '📊' : '📄'} ${file.name}`);
@@ -35,7 +35,7 @@ async function listFolderFiles() {
     const err = error as { message?: string; code?: number };
     console.error('❌ Error:', err.message || error);
     console.error('   Código:', err.code);
-    
+
     if (err.message?.includes('PERMISSION_DENIED') || err.message?.includes('SERVICE_DISABLED')) {
       console.log('\n💡 El problema es que las APIs de Google no están habilitadas.');
       console.log('   Compartir la carpeta NO habilita las APIs automáticamente.');
@@ -52,4 +52,3 @@ async function listFolderFiles() {
 }
 
 listFolderFiles();
-

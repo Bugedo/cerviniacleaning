@@ -15,9 +15,8 @@ export function getSheetsConfig(): SheetsConfig {
   if (process.env.SHEETS_CONFIG) {
     return JSON.parse(process.env.SHEETS_CONFIG);
   }
-  
+
   // En local, leer del archivo
   const configPath = path.join(process.cwd(), 'sheets-config.json');
   return JSON.parse(readFileSync(configPath, 'utf8'));
 }
-

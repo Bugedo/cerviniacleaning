@@ -10,7 +10,7 @@ function getCredentials() {
   if (process.env.GOOGLE_CREDENTIALS) {
     return JSON.parse(process.env.GOOGLE_CREDENTIALS);
   }
-  
+
   // En local, leer del archivo
   const credentialsPath = path.join(process.cwd(), 'cervinia-cleaning-2eef5bdde34b.json');
   return JSON.parse(readFileSync(credentialsPath, 'utf8'));
@@ -54,7 +54,7 @@ export async function createSpreadsheet(title: string, folderId?: string) {
   // Intentar crear usando Drive API primero (más permisos)
   try {
     const drive = await getGoogleDriveClient();
-    
+
     const fileMetadata = {
       name: title,
       mimeType: 'application/vnd.google-apps.spreadsheet',
@@ -70,7 +70,7 @@ export async function createSpreadsheet(title: string, folderId?: string) {
   } catch {
     // Si falla, intentar con Sheets API
     const sheets = await getGoogleSheetsClient();
-    
+
     const resource = {
       properties: {
         title,
@@ -86,7 +86,7 @@ export async function createSpreadsheet(title: string, folderId?: string) {
     // Si se especifica una carpeta, mover el archivo allí
     if (folderId && spreadsheetId) {
       const drive = await getGoogleDriveClient();
-      
+
       try {
         // Obtener el archivo actual para obtener sus padres
         const file = await drive.files.get({
@@ -114,7 +114,7 @@ export async function createSpreadsheet(title: string, folderId?: string) {
 
 export async function getSpreadsheetData(spreadsheetId: string, range: string) {
   const sheets = await getGoogleSheetsClient();
-  
+
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range,
@@ -127,10 +127,10 @@ export async function updateSpreadsheetData(
   spreadsheetId: string,
   range: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  values: any[][]
+  values: any[][],
 ) {
   const sheets = await getGoogleSheetsClient();
-  
+
   await sheets.spreadsheets.values.update({
     spreadsheetId,
     range,
@@ -145,10 +145,10 @@ export async function appendSpreadsheetData(
   spreadsheetId: string,
   range: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  values: any[][]
+  values: any[][],
 ) {
   const sheets = await getGoogleSheetsClient();
-  
+
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range,
@@ -159,4 +159,3 @@ export async function appendSpreadsheetData(
     },
   });
 }
-

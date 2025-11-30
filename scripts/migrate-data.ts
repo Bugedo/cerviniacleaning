@@ -70,7 +70,7 @@ async function migrateData() {
       const nomeReferente = getField('Nome referente agenzia');
       const contattoReferente = getField('Contatto referente');
       const contattoPortineria = getField('Contatto portineria');
-      const infoAccesso = getField('Informazioni per l\'Accesso');
+      const infoAccesso = getField("Informazioni per l'Accesso");
       const ingressoStabile = getField('Ingresso stabile');
       const chiavi = getField('Chiavi');
       const linkMaps = getField('Link a Google Maps');
@@ -83,7 +83,7 @@ async function migrateData() {
       const lavastoviglie = getField('Lavastoviglie');
       const lettiMatrimoniali = getField('Letti matrimoniali');
       const lettiSingoli = getField('Letti singoli');
-      const lettiIngleseItaliana = getField('Letti all\'inglese/italiana');
+      const lettiIngleseItaliana = getField("Letti all'inglese/italiana");
       const bagni = getField('Bagni');
 
       if (cliente && !clientsMap.has(cliente)) {
@@ -180,4 +180,3 @@ async function migrateData() {
 }
 
 migrateData();
-

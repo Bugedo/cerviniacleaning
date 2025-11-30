@@ -21,67 +21,73 @@ export function useLocalCache<T>({ cacheKey, fetchFn, immediate = true }: UseLoc
   /**
    * Cargar datos desde caché o API
    */
-  const loadData = useCallback(async (forceRefresh = false) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const loadData = useCallback(
+    async (forceRefresh = false) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      // Intentar cargar desde caché primero
-      if (!forceRefresh && localCache) {
-        const cached = localCache.get<T>(cacheKey);
-        if (cached) {
-          setData(cached);
-          setLoading(false);
-          setIsStale(false);
-          
-          // Cargar datos frescos en segundo plano
-          try {
-            const response = await fetchFn();
-            if (response.ok) {
-              const freshData = await response.json();
-              localCache.set(cacheKey, freshData);
-              setData(freshData as T);
+        // Intentar cargar desde caché primero
+        if (!forceRefresh && localCache) {
+          const cached = localCache.get<T>(cacheKey);
+          if (cached) {
+            setData(cached);
+            setLoading(false);
+            setIsStale(false);
+
+            // Cargar datos frescos en segundo plano
+            try {
+              const response = await fetchFn();
+              if (response.ok) {
+                const freshData = await response.json();
+                localCache.set(cacheKey, freshData);
+                setData(freshData as T);
+              }
+            } catch (err) {
+              console.warn('Background refresh failed, using cached data:', err);
+              setIsStale(true);
             }
-          } catch (err) {
-            console.warn('Background refresh failed, using cached data:', err);
-            setIsStale(true);
+            return;
           }
-          return;
         }
-      }
 
-      // Si no hay caché o se fuerza refresh, cargar desde API
-      const response = await fetchFn();
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.statusText}`);
-      }
+        // Si no hay caché o se fuerza refresh, cargar desde API
+        const response = await fetchFn();
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
 
-      const result = await response.json();
-      
-      if (localCache) {
-        localCache.set(cacheKey, result);
+        const result = await response.json();
+
+        if (localCache) {
+          localCache.set(cacheKey, result);
+        }
+
+        setData(result as T);
+        setIsStale(false);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        setError(error);
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setData(result as T);
-      setIsStale(false);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
-      setError(error);
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [cacheKey, fetchFn]);
+    },
+    [cacheKey, fetchFn],
+  );
 
   /**
    * Actualizar datos en caché local
    */
-  const updateCache = useCallback((newData: T) => {
-    if (localCache) {
-      localCache.set(cacheKey, newData);
-    }
-    setData(newData);
-  }, [cacheKey]);
+  const updateCache = useCallback(
+    (newData: T) => {
+      if (localCache) {
+        localCache.set(cacheKey, newData);
+      }
+      setData(newData);
+    },
+    [cacheKey],
+  );
 
   /**
    * Agregar a cola de sincronización
@@ -124,4 +130,3 @@ export function useLocalCache<T>({ cacheKey, fetchFn, immediate = true }: UseLoc
     queueSync,
   };
 }
-

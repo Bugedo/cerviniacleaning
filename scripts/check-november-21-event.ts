@@ -22,11 +22,11 @@ async function checkNovember21Event() {
       // Buscar eventos cercanos
       const allDates = calendarRows
         .map((row, index) => ({ date: row[1], index: index + 2 }))
-        .filter(item => item.date && item.date.includes('2025-11'))
+        .filter((item) => item.date && item.date.includes('2025-11'))
         .slice(0, 10);
-      
+
       console.log('\n📋 Fechas cercanas en noviembre 2025:');
-      allDates.forEach(item => {
+      allDates.forEach((item) => {
         console.log(`   - ${item.date} (fila ${item.index})`);
       });
       return;
@@ -44,39 +44,44 @@ async function checkNovember21Event() {
     });
 
     events.forEach((event, eventIndex) => {
-      console.log(`\n📋 Evento ${eventIndex + 1} (ID: ${event[0]}, fila ${calendarRows.indexOf(event) + 2}):`);
+      console.log(
+        `\n📋 Evento ${eventIndex + 1} (ID: ${event[0]}, fila ${calendarRows.indexOf(event) + 2}):`,
+      );
       console.log(`   Tipo: ${event[5] || ''}`);
       console.log(`   Propiedad: ${event[8] || ''}`);
       console.log(`   Cliente: ${event[9] || ''}`);
       console.log(`   Hora: ${event[3] || ''} - ${event[4] || ''}`);
-      
+
       console.log(`\n   👥 Recursos asignados:`);
-      
+
       // Verificar recursos 1-11
       let hasResources = false;
       for (let i = 1; i <= 11; i++) {
         const idIndex = 10 + (i - 1) * 2 + 1; // 11, 13, 15, etc.
         const nameIndex = 10 + (i - 1) * 2 + 2; // 12, 14, 16, etc.
-        
+
         const resourceId = event[idIndex] || '';
         const resourceName = event[nameIndex] || '';
-        
+
         if (resourceId || resourceName) {
           hasResources = true;
           const resource = resourcesMap.get(resourceId);
-          const fullName = resource 
+          const fullName = resource
             ? `${resource.name} ${resource.surname}`
             : resourceName || 'Desconocido';
-          
+
           console.log(`      ${i}. ID: ${resourceId || 'N/A'} - ${fullName}`);
-          
+
           // Verificar si es Aylen
-          if (fullName.toLowerCase().includes('ayelen') || fullName.toLowerCase().includes('aylen')) {
+          if (
+            fullName.toLowerCase().includes('ayelen') ||
+            fullName.toLowerCase().includes('aylen')
+          ) {
             console.log(`         ⭐ ¡ES AYLEN!`);
           }
         }
       }
-      
+
       if (!hasResources) {
         console.log(`      ⚠️  No hay recursos asignados a este evento`);
       }
@@ -91,11 +96,12 @@ async function checkNovember21Event() {
         const resourceId = row[idIndex] || '';
         if (resourceId) {
           const resource = resourcesMap.get(resourceId);
-          if (resource && (
-            resource.name.toLowerCase().includes('ayelen') ||
-            resource.name.toLowerCase().includes('aylen') ||
-            resource.surname.toLowerCase().includes('baronetto')
-          )) {
+          if (
+            resource &&
+            (resource.name.toLowerCase().includes('ayelen') ||
+              resource.name.toLowerCase().includes('aylen') ||
+              resource.surname.toLowerCase().includes('baronetto'))
+          ) {
             console.log(`✅ Aylen encontrada en evento:`);
             console.log(`   ID Evento: ${row[0]}`);
             console.log(`   Fecha: ${row[1]}`);
@@ -131,4 +137,3 @@ async function checkNovember21Event() {
 }
 
 checkNovember21Event();
-

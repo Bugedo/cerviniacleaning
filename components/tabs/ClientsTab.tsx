@@ -63,10 +63,12 @@ export default function ClientsTab() {
             (prop) =>
               client.name.toLowerCase().includes(term) ||
               prop.location.toLowerCase().includes(term) ||
-              prop.ownerName.toLowerCase().includes(term)
+              prop.ownerName.toLowerCase().includes(term),
           ),
         }))
-        .filter((client) => client.properties.length > 0 || client.name.toLowerCase().includes(term));
+        .filter(
+          (client) => client.properties.length > 0 || client.name.toLowerCase().includes(term),
+        );
       setFilteredClients(filtered);
     }
   }, [searchTerm, clients]);
@@ -94,7 +96,7 @@ export default function ClientsTab() {
     clientId: string,
     propertyId: string,
     field: keyof Property,
-    value: string
+    value: string,
   ) => {
     setClients((prevClients) =>
       prevClients.map((client) =>
@@ -102,11 +104,11 @@ export default function ClientsTab() {
           ? {
               ...client,
               properties: client.properties.map((prop) =>
-                prop.id === propertyId ? { ...prop, [field]: value } : prop
+                prop.id === propertyId ? { ...prop, [field]: value } : prop,
               ),
             }
-          : client
-      )
+          : client,
+      ),
     );
     setFilteredClients((prevClients) =>
       prevClients.map((client) =>
@@ -114,11 +116,11 @@ export default function ClientsTab() {
           ? {
               ...client,
               properties: client.properties.map((prop) =>
-                prop.id === propertyId ? { ...prop, [field]: value } : prop
+                prop.id === propertyId ? { ...prop, [field]: value } : prop,
               ),
             }
-          : client
-      )
+          : client,
+      ),
     );
   };
 
@@ -126,7 +128,7 @@ export default function ClientsTab() {
     const fieldKey = `${propertyId}-${field}`;
     setSaving((prev) => ({ ...prev, [fieldKey]: true }));
     setSaved((prev) => ({ ...prev, [fieldKey]: false }));
-    
+
     try {
       const response = await fetch(`/api/properties/${propertyId}`, {
         method: 'PUT',
@@ -143,7 +145,7 @@ export default function ClientsTab() {
       // No recargar toda la página - el estado local ya está actualizado
       // Solo mostrar indicador de éxito
       setSaved((prev) => ({ ...prev, [fieldKey]: true }));
-      
+
       // Ocultar el indicador de éxito después de 2 segundos
       setTimeout(() => {
         setSaved((prev) => ({ ...prev, [fieldKey]: false }));
@@ -269,20 +271,13 @@ export default function ClientsTab() {
           </div>
         ) : (
           filteredClients.map((client) => (
-            <div
-              key={client.id}
-              className="bg-white rounded-lg shadow overflow-hidden"
-            >
+            <div key={client.id} className="bg-white rounded-lg shadow overflow-hidden">
               <button
-                onClick={() =>
-                  setExpandedClient(expandedClient === client.id ? null : client.id)
-                }
+                onClick={() => setExpandedClient(expandedClient === client.id ? null : client.id)}
                 className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
               >
                 <div className="flex-1 text-left">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {client.name}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">
                     {client.properties.length}{' '}
                     {client.properties.length === 1 ? 'proprietà' : 'proprietà'}
@@ -316,7 +311,7 @@ export default function ClientsTab() {
                         <button
                           onClick={() =>
                             setExpandedProperty(
-                              expandedProperty === property.id ? null : property.id
+                              expandedProperty === property.id ? null : property.id,
                             )
                           }
                           className="w-full flex justify-between items-center mb-4"
@@ -347,15 +342,29 @@ export default function ClientsTab() {
                               const fieldKey = `${property.id}-${field}`;
                               const isSaving = saving[fieldKey];
                               const isSaved = saved[fieldKey];
-                              const isTextarea = ['accessInfo', 'services', 'welcomeKit', 'parking', 'specialNotes', 'comments'].includes(field);
+                              const isTextarea = [
+                                'accessInfo',
+                                'services',
+                                'welcomeKit',
+                                'parking',
+                                'specialNotes',
+                                'comments',
+                              ].includes(field);
                               const isLocation = field === 'location';
-                              
+
                               return (
-                                <div key={field} className={isTextarea || isLocation ? 'md:col-span-2' : ''}>
-                                  <label className={`block text-sm font-medium mb-1 ${isLocation ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
+                                <div
+                                  key={field}
+                                  className={isTextarea || isLocation ? 'md:col-span-2' : ''}
+                                >
+                                  <label
+                                    className={`block text-sm font-medium mb-1 ${isLocation ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}
+                                  >
                                     {fieldLabels[field]}
                                     {isSaving && (
-                                      <span className="ml-2 text-xs text-blue-600">Salvataggio...</span>
+                                      <span className="ml-2 text-xs text-blue-600">
+                                        Salvataggio...
+                                      </span>
                                     )}
                                     {isSaved && !isSaving && (
                                       <span className="ml-2 text-xs text-green-600">✓ Salvato</span>
@@ -365,7 +374,12 @@ export default function ClientsTab() {
                                     <textarea
                                       value={property[field] || ''}
                                       onChange={(e) =>
-                                        handleFieldChange(client.id, property.id, field, e.target.value)
+                                        handleFieldChange(
+                                          client.id,
+                                          property.id,
+                                          field,
+                                          e.target.value,
+                                        )
                                       }
                                       onBlur={(e) =>
                                         handleFieldBlur(property.id, field, e.target.value)
@@ -378,7 +392,12 @@ export default function ClientsTab() {
                                       type="text"
                                       value={property[field] || ''}
                                       onChange={(e) =>
-                                        handleFieldChange(client.id, property.id, field, e.target.value)
+                                        handleFieldChange(
+                                          client.id,
+                                          property.id,
+                                          field,
+                                          e.target.value,
+                                        )
                                       }
                                       onBlur={(e) =>
                                         handleFieldBlur(property.id, field, e.target.value)

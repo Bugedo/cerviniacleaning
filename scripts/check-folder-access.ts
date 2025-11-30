@@ -3,11 +3,11 @@ import { getGoogleDriveClient } from '../lib/googleSheets';
 async function checkFolderAccess() {
   try {
     const FOLDER_ID = '13THeS4AnYGPf3RkLzFvDC-uWmPK6rai3';
-    
+
     console.log('🔍 Verificando acceso a la carpeta...\n');
 
     const drive = await getGoogleDriveClient();
-    
+
     // Intentar obtener información de la carpeta
     const folder = await drive.files.get({
       fileId: FOLDER_ID,
@@ -40,11 +40,10 @@ async function checkFolderAccess() {
 
     console.log('\n✅ Las APIs están funcionando correctamente!');
     console.log('   Puedes ejecutar: npm run create-sheets\n');
-
   } catch (error: unknown) {
     const err = error as { message?: string; code?: number; response?: { data?: unknown } };
     console.error('❌ Error:', err.message || error);
-    
+
     if (err.response?.data) {
       console.error('Detalles:', JSON.stringify(err.response.data, null, 2));
     }
@@ -52,4 +51,3 @@ async function checkFolderAccess() {
 }
 
 checkFolderAccess();
-

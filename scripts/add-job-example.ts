@@ -1,4 +1,8 @@
-import { getGoogleSheetsClient, getSpreadsheetData, appendSpreadsheetData } from '../lib/googleSheets';
+import {
+  getGoogleSheetsClient,
+  getSpreadsheetData,
+  appendSpreadsheetData,
+} from '../lib/googleSheets';
 import { readFileSync } from 'fs';
 import path from 'path';
 
@@ -13,7 +17,7 @@ async function addJobExample() {
 
     // Leer trabajos existentes para obtener el próximo ID
     const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:A');
-    const nextId = (calendarData.length).toString();
+    const nextId = calendarData.length.toString();
 
     // Ejemplo 1: Agregar un trabajo normal
     const jobDate = '2024-01-15'; // YYYY-MM-DD
@@ -110,4 +114,3 @@ async function addJobExample() {
 
 // Descomentar para ejecutar el ejemplo
 // addJobExample();
-

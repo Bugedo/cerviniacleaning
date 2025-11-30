@@ -26,9 +26,9 @@ async function findGabriel() {
       const name = (row[1] || '').toLowerCase();
       const surname = (row[2] || '').toLowerCase();
       const fullName = `${row[1] || ''} ${row[2] || ''}`.toLowerCase();
-      
+
       if (
-        name.includes('gabriel') || 
+        name.includes('gabriel') ||
         name.includes('gabriele') ||
         surname.includes('gioria') ||
         fullName.includes('gabriel') ||
@@ -48,4 +48,3 @@ async function findGabriel() {
 }
 
 findGabriel();
-

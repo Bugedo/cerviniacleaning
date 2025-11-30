@@ -12,10 +12,10 @@ async function createEmployees() {
 
     // Crear 11 empleados con números
     const employees: string[][] = [];
-    
+
     // Empleado 1 es el coordinador
     employees.push(['1', 'Coordinador', '', '', '', 'Coordinatore', 'Sì']);
-    
+
     // Empleados 2-11
     for (let i = 2; i <= 11; i++) {
       employees.push([i.toString(), `Empleado ${i}`, '', '', '', 'Operatore', 'Sì']);
@@ -37,4 +37,3 @@ async function createEmployees() {
 }
 
 createEmployees();
-

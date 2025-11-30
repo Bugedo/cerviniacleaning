@@ -111,10 +111,7 @@ export async function POST(request: Request) {
       // Formato decimal - convertir a HH:MM
       const decimalHours = typeof hours === 'number' ? hours : parseFloat(hours);
       if (isNaN(decimalHours) || decimalHours < 0) {
-        return NextResponse.json(
-          { error: 'Horas inválidas' },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: 'Horas inválidas' }, { status: 400 });
       }
       const h = Math.floor(decimalHours);
       const m = Math.round((decimalHours - h) * 60);

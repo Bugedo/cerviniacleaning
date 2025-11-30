@@ -29,10 +29,10 @@ async function findCervinoClients() {
         name: row[1] || '',
         index: index + 2, // +2 porque empieza en 1 y hay header
       }))
-      .filter(client => client.name.toLowerCase().includes('cervino'));
+      .filter((client) => client.name.toLowerCase().includes('cervino'));
 
     console.log(`\n📊 Clientes con "Cervino" encontrados: ${cervinoClients.length}`);
-    cervinoClients.forEach(client => {
+    cervinoClients.forEach((client) => {
       console.log(`   - ID: ${client.id}, Nombre: "${client.name}"`);
     });
   } catch (error) {
@@ -42,4 +42,3 @@ async function findCervinoClients() {
 }
 
 findCervinoClients();
-

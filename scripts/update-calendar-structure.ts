@@ -63,4 +63,3 @@ async function updateCalendarStructure() {
 }
 
 updateCalendarStructure();
-

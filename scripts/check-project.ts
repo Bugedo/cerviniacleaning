@@ -25,4 +25,3 @@ console.log('\n');
 console.log('📁 También asegúrate de que la carpeta esté compartida con:');
 console.log(`   ${credentials.client_email}`);
 console.log('   Con permisos de "Editor"\n');
-

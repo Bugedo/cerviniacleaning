@@ -11,7 +11,7 @@ async function verifyAB13Properties() {
     const clientsData = await getSpreadsheetData(config.sheets.clients, 'Clienti!A:Z');
     const clientsRows = clientsData.slice(1);
 
-    const andreaBruzzo = clientsRows.find(row => row[1] === 'Andrea Bruzzo');
+    const andreaBruzzo = clientsRows.find((row) => row[1] === 'Andrea Bruzzo');
     if (!andreaBruzzo) {
       console.log('❌ No se encontró el cliente "Andrea Bruzzo"');
       return;
@@ -33,16 +33,16 @@ async function verifyAB13Properties() {
         clientName: row[2] || '',
         location: row[4] || '',
       }))
-      .filter(prop => prop.clientId === clientId);
+      .filter((prop) => prop.clientId === clientId);
 
-    properties.forEach(prop => {
+    properties.forEach((prop) => {
       console.log(`   [${prop.id}] "${prop.location}" (fila ${prop.rowIndex})`);
     });
 
     console.log(`\n📊 Total: ${properties.length} propiedades\n`);
 
     // Verificar si falta Escargo
-    const hasEscargo = properties.some(p => p.location.toLowerCase().includes('escargo'));
+    const hasEscargo = properties.some((p) => p.location.toLowerCase().includes('escargo'));
     if (!hasEscargo) {
       console.log('⚠️  No se encontró la propiedad "Escargo"');
       console.log('   ¿Quieres que la cree?');
@@ -56,4 +56,3 @@ async function verifyAB13Properties() {
 }
 
 verifyAB13Properties();
-

@@ -77,7 +77,7 @@ export default function ManualHoursModal({
     }
 
     const timeValue = getTimeValue();
-    
+
     // Validar formato HH:MM
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(timeValue)) {
@@ -194,7 +194,9 @@ export default function ManualHoursModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ore Lavorate * (HH:MM)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ore Lavorate * (HH:MM)
+            </label>
             <div className="flex gap-2 items-center">
               <div className="flex-1">
                 <label className="block text-xs text-gray-600 mb-1">Ore (0-23)</label>
@@ -229,7 +231,8 @@ export default function ManualHoursModal({
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Formato 24h: {getTimeValue()} = {Math.floor(parseInt(hours) + parseInt(minutes) / 60)}h {minutes}min
+              Formato 24h: {getTimeValue()} = {Math.floor(parseInt(hours) + parseInt(minutes) / 60)}
+              h {minutes}min
             </p>
           </div>
 

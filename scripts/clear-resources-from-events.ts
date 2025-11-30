@@ -25,12 +25,12 @@ async function clearResourcesFromEvents() {
 
     rows.forEach((row, index) => {
       const rowNumber = index + 2; // +2 porque empieza en 1 y hay header
-      
+
       // Limpiar todos los recursos (1-11)
       for (let i = 1; i <= 11; i++) {
         const idIndex = 10 + (i - 1) * 2 + 1; // 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
         const nameIndex = 10 + (i - 1) * 2 + 2; // 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32
-        
+
         // Convertir índice a letra de columna
         const getColumnLetter = (colIndex: number): string => {
           if (colIndex < 26) {
@@ -70,8 +70,10 @@ async function clearResourcesFromEvents() {
     const BATCH_SIZE = 1000;
     for (let i = 0; i < updates.length; i += BATCH_SIZE) {
       const batch = updates.slice(i, i + BATCH_SIZE);
-      console.log(`   Procesando lote ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} actualizaciones)...`);
-      
+      console.log(
+        `   Procesando lote ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} actualizaciones)...`,
+      );
+
       await sheets.spreadsheets.values.batchUpdate({
         spreadsheetId: calendarSheetId,
         requestBody: {
@@ -92,4 +94,3 @@ async function clearResourcesFromEvents() {
 }
 
 clearResourcesFromEvents();
-

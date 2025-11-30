@@ -16,7 +16,7 @@ async function inspectClientsSheet() {
     // Listar todas las hojas del spreadsheet
     const { getGoogleSheetsClient } = await import('../lib/googleSheets');
     const sheets = await getGoogleSheetsClient();
-    
+
     const spreadsheet = await sheets.spreadsheets.get({
       spreadsheetId: clientsSheetId,
     });
@@ -82,7 +82,6 @@ async function inspectClientsSheet() {
       const err = error as { message?: string };
       console.log(`   ❌ Error: ${err.message || error}`);
     }
-
   } catch (error: unknown) {
     const err = error as { message?: string };
     console.error('❌ Error:', err.message || error);
@@ -90,4 +89,3 @@ async function inspectClientsSheet() {
 }
 
 inspectClientsSheet();
-

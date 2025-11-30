@@ -71,15 +71,7 @@ async function setupAllSheets() {
       console.log('   ℹ️  Hoja "Risorse" ya existe');
     }
 
-    const resourcesHeaders = [
-      'ID',
-      'Nome',
-      'Cognome',
-      'Email',
-      'Telefono',
-      'Ruolo',
-      'Attivo',
-    ];
+    const resourcesHeaders = ['ID', 'Nome', 'Cognome', 'Email', 'Telefono', 'Ruolo', 'Attivo'];
 
     await updateSpreadsheetData(config.sheets.resources, 'Risorse!A1', [resourcesHeaders]);
     console.log('   ✅ Headers de Risorse configurados\n');
@@ -104,15 +96,7 @@ async function setupAllSheets() {
       console.log('   ℹ️  Hoja "Fatturazione" ya existe');
     }
 
-    const billingHeaders = [
-      'ID',
-      'Data',
-      'Cliente',
-      'Proprietà',
-      'Importo',
-      'Stato',
-      'Note',
-    ];
+    const billingHeaders = ['ID', 'Data', 'Cliente', 'Proprietà', 'Importo', 'Stato', 'Note'];
 
     await updateSpreadsheetData(config.sheets.billing, 'Fatturazione!A1', [billingHeaders]);
     console.log('   ✅ Headers de Fatturazione configurados\n');
@@ -130,4 +114,3 @@ async function setupAllSheets() {
 }
 
 setupAllSheets();
-

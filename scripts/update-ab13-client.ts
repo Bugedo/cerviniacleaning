@@ -19,7 +19,8 @@ async function updateAB13Client() {
     clientsRows.forEach((row, index) => {
       const id = row[0] || '';
       const name = row[1] || '';
-      if (name === 'AB13' || id === '4') { // ID 4 según la búsqueda anterior
+      if (name === 'AB13' || id === '4') {
+        // ID 4 según la búsqueda anterior
         ab13Client = { id, name, rowIndex: index + 2 }; // +2 porque empieza en 1 y hay header
       }
     });
@@ -29,7 +30,9 @@ async function updateAB13Client() {
       return;
     }
 
-    console.log(`   ✅ Cliente encontrado: "${ab13Client.name}" (ID: ${ab13Client.id}, fila ${ab13Client.rowIndex})`);
+    console.log(
+      `   ✅ Cliente encontrado: "${ab13Client.name}" (ID: ${ab13Client.id}, fila ${ab13Client.rowIndex})`,
+    );
     console.log(`   📝 Actualizando nombre a "Andrea Bruzzo"...`);
 
     // Actualizar nombre del cliente
@@ -61,7 +64,7 @@ async function updateAB13Client() {
 
       if (propertyClientId === ab13Client.id) {
         const locationLower = location.toLowerCase();
-        
+
         // Identificar propiedades de Condominio Circus
         if (locationLower.includes('circus')) {
           // Necesitamos identificar cuál es cuál, pero como no sabemos el orden exacto,
@@ -103,7 +106,9 @@ async function updateAB13Client() {
     console.log('   - 44');
     console.log('   - 81');
     console.log('   - Escargo');
-    console.log('\n   O puedo actualizar todas las que contengan "circus" con los nombres en orden.\n');
+    console.log(
+      '\n   O puedo actualizar todas las que contengan "circus" con los nombres en orden.\n',
+    );
 
     // Actualizar todas las propiedades que contengan "circus" con los nombres en orden
     const circusProperties = propertiesRows
@@ -112,17 +117,19 @@ async function updateAB13Client() {
         location: row[4] || '',
         clientId: row[1] || '',
       }))
-      .filter(prop => prop.clientId === ab13Client.id && prop.location.toLowerCase().includes('circus'));
+      .filter(
+        (prop) => prop.clientId === ab13Client.id && prop.location.toLowerCase().includes('circus'),
+      );
 
     const newNames = ['CP1', '101', '44', '81'];
-    
+
     if (circusProperties.length === 4) {
       console.log('✅ Encontradas 4 propiedades de Condominio Circus, actualizando...\n');
       for (let i = 0; i < circusProperties.length; i++) {
         const prop = circusProperties[i];
         const newName = newNames[i];
         console.log(`   📝 "${prop.location}" → "${newName}"`);
-        
+
         await sheets.spreadsheets.values.update({
           spreadsheetId: config.sheets.clients,
           range: `Proprietà!E${prop.rowIndex}`,
@@ -134,9 +141,11 @@ async function updateAB13Client() {
       }
       console.log(`   ✅ ${circusProperties.length} propiedades actualizadas\n`);
     } else {
-      console.log(`⚠️  Se encontraron ${circusProperties.length} propiedades de Circus, esperaba 4.`);
+      console.log(
+        `⚠️  Se encontraron ${circusProperties.length} propiedades de Circus, esperaba 4.`,
+      );
       console.log('   Propiedades encontradas:');
-      circusProperties.forEach(prop => {
+      circusProperties.forEach((prop) => {
         console.log(`     - "${prop.location}" (fila ${prop.rowIndex})`);
       });
     }
@@ -148,7 +157,10 @@ async function updateAB13Client() {
         location: row[4] || '',
         clientId: row[1] || '',
       }))
-      .find(prop => prop.clientId === ab13Client.id && prop.location.toLowerCase().includes('escargo'));
+      .find(
+        (prop) =>
+          prop.clientId === ab13Client.id && prop.location.toLowerCase().includes('escargo'),
+      );
 
     if (escargoProperty) {
       if (escargoProperty.location !== 'Escargo') {
@@ -177,7 +189,7 @@ async function updateAB13Client() {
         clientId: row[1] || '',
         clientName: row[2] || '',
       }))
-      .filter(prop => prop.clientId === ab13Client.id && prop.clientName !== 'Andrea Bruzzo');
+      .filter((prop) => prop.clientId === ab13Client.id && prop.clientName !== 'Andrea Bruzzo');
 
     if (allProperties.length > 0) {
       for (const prop of allProperties) {
@@ -190,7 +202,9 @@ async function updateAB13Client() {
           },
         });
       }
-      console.log(`   ✅ ${allProperties.length} propiedades actualizadas con nuevo nombre de cliente\n`);
+      console.log(
+        `   ✅ ${allProperties.length} propiedades actualizadas con nuevo nombre de cliente\n`,
+      );
     }
 
     // Actualizar eventos que referencian AB13
@@ -236,4 +250,3 @@ async function updateAB13Client() {
 }
 
 updateAB13Client();
-

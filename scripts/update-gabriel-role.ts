@@ -19,10 +19,7 @@ async function updateGabrielRole() {
     resourcesRows.forEach((row, index) => {
       const name = (row[1] || '').toLowerCase();
       const surname = (row[2] || '').toLowerCase();
-      if (
-        (name.includes('gabriel') || name.includes('gabriele')) &&
-        surname.includes('gioria')
-      ) {
+      if ((name.includes('gabriel') || name.includes('gabriele')) && surname.includes('gioria')) {
         gabrielRowIndex = index + 2; // +2 porque empieza en 1 y hay header
         console.log(`✅ Encontrado: ${row[1]} ${row[2]} (ID: ${row[0]}, fila ${gabrielRowIndex})`);
         console.log(`   Rol actual: "${row[5] || ''}"`);
@@ -34,7 +31,9 @@ async function updateGabrielRole() {
       resourcesRows.forEach((row, index) => {
         if (row[0] === '2') {
           gabrielRowIndex = index + 2;
-          console.log(`✅ Encontrado por ID: ${row[1]} ${row[2]} (ID: ${row[0]}, fila ${gabrielRowIndex})`);
+          console.log(
+            `✅ Encontrado por ID: ${row[1]} ${row[2]} (ID: ${row[0]}, fila ${gabrielRowIndex})`,
+          );
           console.log(`   Rol actual: "${row[5] || ''}"`);
         }
       });
@@ -71,4 +70,3 @@ async function updateGabrielRole() {
 }
 
 updateGabrielRole();
-

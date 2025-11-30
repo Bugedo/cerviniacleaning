@@ -21,7 +21,9 @@ async function checkSheetsStatus() {
     console.log('2. 📅 Sheet de Calendario:');
     try {
       const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:M');
-      console.log(`   ${calendarData.length > 1 ? '✅' : '⚠️ '} Registros: ${calendarData.length - 1}`);
+      console.log(
+        `   ${calendarData.length > 1 ? '✅' : '⚠️ '} Registros: ${calendarData.length - 1}`,
+      );
       if (calendarData.length === 1) {
         console.log('   ⚠️  Solo tiene headers, necesita datos\n');
       }
@@ -33,7 +35,9 @@ async function checkSheetsStatus() {
     console.log('3. 👥 Sheet de Risorse:');
     try {
       const resourcesData = await getSpreadsheetData(config.sheets.resources, 'Risorse!A:G');
-      console.log(`   ${resourcesData.length > 1 ? '✅' : '⚠️ '} Registros: ${resourcesData.length - 1}`);
+      console.log(
+        `   ${resourcesData.length > 1 ? '✅' : '⚠️ '} Registros: ${resourcesData.length - 1}`,
+      );
       if (resourcesData.length === 1) {
         console.log('   ⚠️  Solo tiene headers, necesita datos\n');
       }
@@ -45,7 +49,9 @@ async function checkSheetsStatus() {
     console.log('4. 💰 Sheet de Fatturazione:');
     try {
       const billingData = await getSpreadsheetData(config.sheets.billing, 'Fatturazione!A:G');
-      console.log(`   ${billingData.length > 1 ? '✅' : '⚠️ '} Registros: ${billingData.length - 1}`);
+      console.log(
+        `   ${billingData.length > 1 ? '✅' : '⚠️ '} Registros: ${billingData.length - 1}`,
+      );
       if (billingData.length === 1) {
         console.log('   ⚠️  Solo tiene headers, necesita datos\n');
       }
@@ -61,4 +67,3 @@ async function checkSheetsStatus() {
 }
 
 checkSheetsStatus();
-

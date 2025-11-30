@@ -21,7 +21,7 @@ class SyncQueue {
 
     this.isProcessing = true;
     this.processQueue();
-    
+
     // Procesar cada 5 segundos
     this.intervalId = setInterval(() => {
       this.processQueue();
@@ -57,10 +57,10 @@ class SyncQueue {
         localCache.removeFromSyncQueue(item.id);
       } catch (error) {
         console.error(`Error syncing item ${item.id}:`, error);
-        
+
         // Incrementar contador de reintentos
         localCache.incrementRetry(item.id);
-        
+
         // Si excede el máximo de reintentos, remover de la cola
         if (item.retries >= MAX_RETRIES) {
           console.error(`Max retries reached for item ${item.id}, removing from queue`);
@@ -170,4 +170,3 @@ class SyncQueue {
 
 // Singleton instance
 export const syncQueue = typeof window !== 'undefined' ? new SyncQueue() : null;
-

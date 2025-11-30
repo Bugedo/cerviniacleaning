@@ -43,7 +43,10 @@ export default function ResourcesTab() {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [expandedResource, setExpandedResource] = useState<string | null>(null);
   const [showManualHoursModal, setShowManualHoursModal] = useState(false);
-  const [selectedResourceForManualHours, setSelectedResourceForManualHours] = useState<{ id: string; name: string } | null>(null);
+  const [selectedResourceForManualHours, setSelectedResourceForManualHours] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchResources();
@@ -53,13 +56,11 @@ export default function ResourcesTab() {
   const fetchResources = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const url = selectedMonth
-        ? `/api/resources?month=${selectedMonth}`
-        : '/api/resources';
-      
+      const url = selectedMonth ? `/api/resources?month=${selectedMonth}` : '/api/resources';
+
       // Si se fuerza refresh, agregar timestamp para evitar caché
       const fetchUrl = forceRefresh ? `${url}?_t=${Date.now()}` : url;
-      
+
       const response = await fetch(fetchUrl);
       if (!response.ok) throw new Error('Error al cargar recursos');
       const data = await response.json();
@@ -81,8 +82,18 @@ export default function ResourcesTab() {
     if (!month) return 'Tutti i mesi';
     const [year, monthNum] = month.split('-');
     const months = [
-      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+      'Gennaio',
+      'Febbraio',
+      'Marzo',
+      'Aprile',
+      'Maggio',
+      'Giugno',
+      'Luglio',
+      'Agosto',
+      'Settembre',
+      'Ottobre',
+      'Novembre',
+      'Dicembre',
     ];
     return `${months[parseInt(monthNum) - 1]} ${year}`;
   };
@@ -115,8 +126,18 @@ export default function ResourcesTab() {
   const formatMonthLabel = (monthStr: string): string => {
     const [year, month] = monthStr.split('-');
     const months = [
-      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+      'Gennaio',
+      'Febbraio',
+      'Marzo',
+      'Aprile',
+      'Maggio',
+      'Giugno',
+      'Luglio',
+      'Agosto',
+      'Settembre',
+      'Ottobre',
+      'Novembre',
+      'Dicembre',
     ];
     return `${months[parseInt(month) - 1]} ${year}`;
   };
@@ -247,9 +268,15 @@ export default function ResourcesTab() {
                                   <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-100">
                                       <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ore</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Dettaglio</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Data
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Ore
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Dettaglio
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -272,7 +299,9 @@ export default function ResourcesTab() {
                                   </table>
                                 </div>
                               ) : (
-                                <p className="text-sm text-gray-500">Nessuna ora manuale registrata</p>
+                                <p className="text-sm text-gray-500">
+                                  Nessuna ora manuale registrata
+                                </p>
                               )}
                             </div>
                           )}
@@ -288,10 +317,18 @@ export default function ResourcesTab() {
                                   <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-100">
                                       <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ora</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Proprietà</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Cliente</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Data
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Ora
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Proprietà
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Cliente
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -321,41 +358,49 @@ export default function ResourcesTab() {
                           )}
 
                           {/* Horas Manuales - Para empleados normales (además de eventos) */}
-                          {!resource.isCoordinatorOnly && resource.manualHours && resource.manualHours.length > 0 && (
-                            <div>
-                              <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                                Ore Manuali Aggiuntive ({resource.manualHours.length})
-                              </h4>
-                              <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                  <thead className="bg-gray-100">
-                                    <tr>
-                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data</th>
-                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Ore</th>
-                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Dettaglio</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="bg-white divide-y divide-gray-200">
-                                    {resource.manualHours
-                                      .sort((a, b) => b.date.localeCompare(a.date))
-                                      .map((mh) => (
-                                        <tr key={mh.id} className="hover:bg-gray-50">
-                                          <td className="px-3 py-2 text-xs text-gray-900">
-                                            {formatDate(mh.date)}
-                                          </td>
-                                          <td className="px-3 py-2 text-xs text-gray-900 font-semibold">
-                                            {formatHours(mh.hours)}
-                                          </td>
-                                          <td className="px-3 py-2 text-xs text-gray-500">
-                                            {mh.notes || '-'}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                  </tbody>
-                                </table>
+                          {!resource.isCoordinatorOnly &&
+                            resource.manualHours &&
+                            resource.manualHours.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                                  Ore Manuali Aggiuntive ({resource.manualHours.length})
+                                </h4>
+                                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-100">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Data
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Ore
+                                        </th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                                          Dettaglio
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {resource.manualHours
+                                        .sort((a, b) => b.date.localeCompare(a.date))
+                                        .map((mh) => (
+                                          <tr key={mh.id} className="hover:bg-gray-50">
+                                            <td className="px-3 py-2 text-xs text-gray-900">
+                                              {formatDate(mh.date)}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-gray-900 font-semibold">
+                                              {formatHours(mh.hours)}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-gray-500">
+                                              {mh.notes || '-'}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
                           {/* Ore per settimana */}
                           <div>
@@ -367,7 +412,10 @@ export default function ResourcesTab() {
                                 {Object.entries(resource.weeklyHours)
                                   .sort(([a], [b]) => a.localeCompare(b))
                                   .map(([weekStart, hours]) => (
-                                    <div key={weekStart} className="flex justify-between text-sm text-gray-700 bg-white px-3 py-1 rounded border border-gray-200">
+                                    <div
+                                      key={weekStart}
+                                      className="flex justify-between text-sm text-gray-700 bg-white px-3 py-1 rounded border border-gray-200"
+                                    >
                                       <span>{formatWeek(weekStart)}</span>
                                       <span className="font-semibold">{formatHours(hours)}</span>
                                     </div>
@@ -388,7 +436,10 @@ export default function ResourcesTab() {
                                 {Object.entries(resource.monthlyHours)
                                   .sort(([a], [b]) => a.localeCompare(b))
                                   .map(([month, hours]) => (
-                                    <div key={month} className="flex justify-between text-sm text-gray-700 bg-white px-3 py-1 rounded border border-gray-200">
+                                    <div
+                                      key={month}
+                                      className="flex justify-between text-sm text-gray-700 bg-white px-3 py-1 rounded border border-gray-200"
+                                    >
                                       <span>{formatMonthLabel(month)}</span>
                                       <span className="font-semibold">{formatHours(hours)}</span>
                                     </div>

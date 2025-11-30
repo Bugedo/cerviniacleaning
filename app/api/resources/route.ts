@@ -153,7 +153,7 @@ export async function GET(request: Request) {
           const nameIndex = 10 + (i - 1) * 2 + 2; // 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32
           const resourceId = (row[idIndex] || '') as string;
           const resourceName = (row[nameIndex] || '') as string;
-          
+
           if (i === 1) {
             job.resource1Id = resourceId;
             job.resource1Name = resourceName;

@@ -1,4 +1,8 @@
-import { getGoogleSheetsClient, createSpreadsheet, updateSpreadsheetData } from '../lib/googleSheets';
+import {
+  getGoogleSheetsClient,
+  createSpreadsheet,
+  updateSpreadsheetData,
+} from '../lib/googleSheets';
 import XLSX from 'xlsx';
 import path from 'path';
 import { writeFileSync } from 'fs';
@@ -91,7 +95,7 @@ async function createSheets() {
       const nomeReferente = getField('Nome referente agenzia');
       const contattoReferente = getField('Contatto referente');
       const contattoPortineria = getField('Contatto portineria');
-      const infoAccesso = getField('Informazioni per l\'Accesso');
+      const infoAccesso = getField("Informazioni per l'Accesso");
       const ingressoStabile = getField('Ingresso stabile');
       const chiavi = getField('Chiavi');
       const linkMaps = getField('Link a Google Maps');
@@ -104,7 +108,7 @@ async function createSheets() {
       const lavastoviglie = getField('Lavastoviglie');
       const lettiMatrimoniali = getField('Letti matrimoniali');
       const lettiSingoli = getField('Letti singoli');
-      const lettiIngleseItaliana = getField('Letti all\'inglese/italiana');
+      const lettiIngleseItaliana = getField("Letti all'inglese/italiana");
       const bagni = getField('Bagni');
 
       // Agregar cliente si no existe
@@ -218,15 +222,7 @@ async function createSheets() {
     await updateSpreadsheetData(calendarSheetId, 'Calendario!A1', [calendarHeaders]);
 
     // Crear estructura para Risorse
-    const resourcesHeaders = [
-      'ID',
-      'Nome',
-      'Cognome',
-      'Email',
-      'Telefono',
-      'Ruolo',
-      'Attivo',
-    ];
+    const resourcesHeaders = ['ID', 'Nome', 'Cognome', 'Email', 'Telefono', 'Ruolo', 'Attivo'];
 
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId: resourcesSheetId,
@@ -244,15 +240,7 @@ async function createSheets() {
     await updateSpreadsheetData(resourcesSheetId, 'Risorse!A1', [resourcesHeaders]);
 
     // Crear estructura para Fatturazione
-    const billingHeaders = [
-      'ID',
-      'Data',
-      'Cliente',
-      'Proprietà',
-      'Importo',
-      'Stato',
-      'Note',
-    ];
+    const billingHeaders = ['ID', 'Data', 'Cliente', 'Proprietà', 'Importo', 'Stato', 'Note'];
 
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId: billingSheetId,
@@ -286,10 +274,7 @@ async function createSheets() {
       },
     };
 
-    writeFileSync(
-      path.join(process.cwd(), 'sheets-config.json'),
-      JSON.stringify(config, null, 2)
-    );
+    writeFileSync(path.join(process.cwd(), 'sheets-config.json'), JSON.stringify(config, null, 2));
 
     console.log('✅ Configuración guardada en sheets-config.json');
   } catch (error) {
@@ -299,4 +284,3 @@ async function createSheets() {
 }
 
 createSheets();
-

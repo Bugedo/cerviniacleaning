@@ -11,7 +11,7 @@ import { syncQueue } from './syncQueue';
 export async function apiGet<T>(
   endpoint: string,
   cacheKey: string,
-  options?: { forceRefresh?: boolean }
+  options?: { forceRefresh?: boolean },
 ): Promise<T> {
   // Intentar cargar desde caché primero
   if (!options?.forceRefresh && localCache) {
@@ -28,7 +28,7 @@ export async function apiGet<T>(
         .catch((err) => {
           console.warn('Background refresh failed:', err);
         });
-      
+
       return cached;
     }
   }
@@ -40,7 +40,7 @@ export async function apiGet<T>(
   }
 
   const data = await response.json();
-  
+
   // Guardar en caché
   if (localCache) {
     localCache.set(cacheKey, data);
@@ -56,7 +56,7 @@ export async function apiPost<TRequest, TResponse>(
   endpoint: string,
   data: TRequest,
   cacheKey: string,
-  updateCache: (data: TRequest, response: TResponse, current?: unknown) => unknown
+  updateCache: (data: TRequest, response: TResponse, current?: unknown) => unknown,
 ): Promise<TResponse> {
   // Guardar estado anterior para revertir si es necesario
   let previousData: unknown = null;
@@ -123,7 +123,7 @@ export async function apiPut<TRequest, TResponse>(
   endpoint: string,
   data: TRequest,
   cacheKey: string,
-  updateCache: (data: TRequest, response: TResponse, current?: unknown) => unknown
+  updateCache: (data: TRequest, response: TResponse, current?: unknown) => unknown,
 ): Promise<TResponse> {
   // Guardar estado anterior para revertir si es necesario
   let previousData: unknown = null;
@@ -188,7 +188,7 @@ export async function apiPut<TRequest, TResponse>(
 export async function apiDelete<TResponse>(
   endpoint: string,
   cacheKey: string,
-  updateCache: (response: TResponse) => unknown
+  updateCache: (response: TResponse) => unknown,
 ): Promise<TResponse> {
   // Guardar estado anterior para revertir si es necesario
   let previousData: unknown = null;
@@ -214,7 +214,7 @@ export async function apiDelete<TResponse>(
       throw new Error(`Failed to delete: ${response.statusText}`);
     }
 
-    const result = await response.json().catch(() => ({} as TResponse));
+    const result = await response.json().catch(() => ({}) as TResponse);
 
     // Actualizar caché con respuesta real
     if (localCache && optimisticData) {
@@ -250,4 +250,3 @@ export function initSyncQueue(): void {
     syncQueue.start();
   }
 }
-

@@ -26,7 +26,7 @@ async function testConnection() {
 
     if (testSpreadsheet.data.spreadsheetId) {
       console.log(`   ✅ Spreadsheet creado: ${testSpreadsheet.data.spreadsheetId}`);
-      
+
       // Limpiar: eliminar el spreadsheet de prueba
       const driveClient = await getGoogleDriveClient();
       await driveClient.files.delete({
@@ -40,7 +40,7 @@ async function testConnection() {
     console.error('\n❌ Error en la conexión:');
     console.error('Mensaje:', error.message);
     console.error('Código:', error.code);
-    
+
     if (error.response?.data) {
       console.error('Detalles:', JSON.stringify(error.response.data, null, 2));
     }
@@ -50,10 +50,11 @@ async function testConnection() {
       console.log('1. Verifica que las APIs estén habilitadas en Google Cloud Console');
       console.log('2. Espera 2-3 minutos después de habilitar las APIs');
       console.log('3. Verifica que la cuenta de servicio tenga permisos en la carpeta');
-      console.log('4. Comparte la carpeta con: cervinia-cleaning@cervinia-cleaning.iam.gserviceaccount.com');
+      console.log(
+        '4. Comparte la carpeta con: cervinia-cleaning@cervinia-cleaning.iam.gserviceaccount.com',
+      );
     }
   }
 }
 
 testConnection();
-

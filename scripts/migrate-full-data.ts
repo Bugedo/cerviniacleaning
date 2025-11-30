@@ -1,4 +1,8 @@
-import { getGoogleSheetsClient, updateSpreadsheetData, getSpreadsheetData } from '../lib/googleSheets';
+import {
+  getGoogleSheetsClient,
+  updateSpreadsheetData,
+  getSpreadsheetData,
+} from '../lib/googleSheets';
 import { readFileSync } from 'fs';
 import path from 'path';
 import XLSX from 'xlsx';
@@ -79,7 +83,7 @@ async function migrateFullData() {
       const nomeReferente = getField('Nome referente agenzia');
       const contattoReferente = getField('Contatto referente');
       const contattoPortineria = getField('Contatto portineria');
-      const infoAccesso = getField('Informazioni per l\'Accesso');
+      const infoAccesso = getField("Informazioni per l'Accesso");
       const ingressoStabile = getField('Ingresso stabile');
       const chiavi = getField('Chiavi');
       const linkMaps = getField('Link a Google Maps');
@@ -92,7 +96,7 @@ async function migrateFullData() {
       const lavastoviglie = getField('Lavastoviglie');
       const lettiMatrimoniali = getField('Letti matrimoniali');
       const lettiSingoli = getField('Letti singoli');
-      const lettiIngleseItaliana = getField('Letti all\'inglese/italiana');
+      const lettiIngleseItaliana = getField("Letti all'inglese/italiana");
       const bagni = getField('Bagni');
 
       // Solo agregar cliente si tiene datos
@@ -149,7 +153,7 @@ async function migrateFullData() {
     // Leer propiedades existentes para preservar las que no están en el Excel (como las de Lika)
     const existingPropertiesData = await getSpreadsheetData(clientsSheetId, 'Proprietà!A:AA');
     const existingPropertiesMap = new Map<string, string[]>();
-    
+
     // Mapear propiedades existentes por ID
     existingPropertiesData.slice(1).forEach((row) => {
       if (row[0]) {
@@ -197,7 +201,9 @@ async function migrateFullData() {
 
     // Actualizar hoja de propiedades con todas las propiedades (del Excel + existentes)
     await updateSpreadsheetData(clientsSheetId, 'Proprietà!A1', allPropertiesData);
-    console.log(`✅ ${allPropertiesData.length - 1} proprietà totali (${propertiesData.length - 1} dal Excel + ${allPropertiesData.length - propertiesData.length} esistenti)\n`);
+    console.log(
+      `✅ ${allPropertiesData.length - 1} proprietà totali (${propertiesData.length - 1} dal Excel + ${allPropertiesData.length - propertiesData.length} esistenti)\n`,
+    );
 
     console.log('✅ Migración completa finalizada!');
     console.log(`\n📊 Resumen:`);
@@ -213,4 +219,3 @@ async function migrateFullData() {
 }
 
 migrateFullData();
-

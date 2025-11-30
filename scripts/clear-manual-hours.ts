@@ -30,7 +30,7 @@ async function clearManualHours() {
       });
 
       const rows = response.data.values || [];
-      
+
       if (rows.length <= 1) {
         console.log('✅ No hay horas manuales para eliminar (solo header o hoja vacía).');
         return;
@@ -42,7 +42,7 @@ async function clearManualHours() {
       // Limpiar todas las filas excepto el header
       // Borrar desde la fila 2 hasta el final
       const lastRow = rows.length;
-      
+
       await sheets.spreadsheets.values.clear({
         spreadsheetId: config.sheets.resources,
         range: `Ore Manuali!A2:E${lastRow}`,
@@ -50,7 +50,9 @@ async function clearManualHours() {
 
       console.log(`✅ Eliminadas ${dataRows} filas de horas manuales.`);
       console.log('✅ La hoja "Ore Manuali" ahora solo contiene el header.');
-      console.log('\n✨ Limpieza completada. Puedes empezar a cargar horas manualmente desde cero.');
+      console.log(
+        '\n✨ Limpieza completada. Puedes empezar a cargar horas manualmente desde cero.',
+      );
     } catch (error) {
       if (error instanceof Error && error.message.includes('does not exist')) {
         console.log('✅ La hoja "Ore Manuali" no existe. No hay nada que limpiar.');
@@ -65,4 +67,3 @@ async function clearManualHours() {
 }
 
 clearManualHours();
-

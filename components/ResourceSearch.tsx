@@ -40,7 +40,7 @@ export default function ResourceSearch({
         (r: Resource) =>
           r.role !== 'Coordinatore' &&
           r.role !== 'Assistente Coordinatore' &&
-          !excludedResourceIds.includes(r.id)
+          !excludedResourceIds.includes(r.id),
       );
 
       setResources(availableResources);
@@ -55,14 +55,9 @@ export default function ResourceSearch({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
   useEffect(() => {
     if (searchTerm.trim() === '') {
-      setFilteredResources(
-        resources.filter(
-          (r) => !excludedResourceIds.includes(r.id)
-        )
-      );
+      setFilteredResources(resources.filter((r) => !excludedResourceIds.includes(r.id)));
     } else {
       const term = searchTerm.toLowerCase();
       const filtered = resources.filter(
@@ -70,7 +65,7 @@ export default function ResourceSearch({
           !excludedResourceIds.includes(r.id) &&
           (`${r.name} ${r.surname}`.toLowerCase().includes(term) ||
             r.name.toLowerCase().includes(term) ||
-            r.surname.toLowerCase().includes(term))
+            r.surname.toLowerCase().includes(term)),
       );
       setFilteredResources(filtered);
     }

@@ -63,9 +63,9 @@ interface Resource {
 
 // Generar color consistente para cada cliente
 const getClientColor = (clientId: string, clients: Client[]): string => {
-  const clientIndex = clients.findIndex(c => c.id === clientId);
+  const clientIndex = clients.findIndex((c) => c.id === clientId);
   if (clientIndex === -1) return 'bg-green-100 border-green-300';
-  
+
   const colors = [
     'bg-blue-100 border-blue-300',
     'bg-purple-100 border-purple-300',
@@ -78,7 +78,7 @@ const getClientColor = (clientId: string, clients: Client[]): string => {
     'bg-cyan-100 border-cyan-300',
     'bg-lime-100 border-lime-300',
   ];
-  
+
   return colors[clientIndex % colors.length] || 'bg-green-100 border-green-300';
 };
 
@@ -116,7 +116,7 @@ export default function CalendarTabNew() {
     const dayJobs = jobs.filter((job) => job.date === dateStr);
     // Eliminar duplicados basándose en el ID
     const uniqueJobs = dayJobs.reduce((acc, job) => {
-      if (!acc.find(j => j.id === job.id)) {
+      if (!acc.find((j) => j.id === job.id)) {
         acc.push(job);
       }
       return acc;
@@ -136,8 +136,18 @@ export default function CalendarTabNew() {
 
   const getMonthName = (date: Date): string => {
     const months = [
-      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+      'Gennaio',
+      'Febbraio',
+      'Marzo',
+      'Aprile',
+      'Maggio',
+      'Giugno',
+      'Luglio',
+      'Agosto',
+      'Settembre',
+      'Ottobre',
+      'Novembre',
+      'Dicembre',
     ];
     return months[date.getMonth()];
   };
@@ -163,15 +173,15 @@ export default function CalendarTabNew() {
     try {
       const data = await apiGet<{ resources: Resource[] }>('/api/resources', CACHE_KEYS.RESOURCES);
       // Filtrar solo empleados que NO son coordinadores ni asistentes coordinadores
-      const employees = (data.resources || []).filter(
-        (resource: Resource) => {
-          const role = (resource.role || '').toLowerCase();
-          return !role.includes('coordinatore') && 
-                 !role.includes('coordinador') &&
-                 !role.includes('assistente coordinatore') &&
-                 !role.includes('asistente coordinador');
-        }
-      );
+      const employees = (data.resources || []).filter((resource: Resource) => {
+        const role = (resource.role || '').toLowerCase();
+        return (
+          !role.includes('coordinatore') &&
+          !role.includes('coordinador') &&
+          !role.includes('assistente coordinatore') &&
+          !role.includes('asistente coordinador')
+        );
+      });
       setResources(employees);
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -184,13 +194,15 @@ export default function CalendarTabNew() {
       setLoading(true);
       const weekStart = getWeekStart(currentWeek);
       const cacheKey = `${CACHE_KEYS.CALENDAR}_${weekStart}`;
-      
+
       // Si se fuerza refresh, limpiar caché primero
       if (forceRefresh && localCache) {
         localCache.clear(cacheKey);
       }
-      
-      const data = await apiGet<{ jobs: Job[] }>(`/api/calendar?weekStart=${weekStart}`, cacheKey, { forceRefresh });
+
+      const data = await apiGet<{ jobs: Job[] }>(`/api/calendar?weekStart=${weekStart}`, cacheKey, {
+        forceRefresh,
+      });
       const jobsOnly = (data.jobs || []).filter((job: Job) => job.type === 'Lavoro');
       setJobs(jobsOnly);
     } catch (error) {
@@ -211,24 +223,17 @@ export default function CalendarTabNew() {
     try {
       const weekStart = getWeekStart(currentWeek);
       const cacheKey = `${CACHE_KEYS.CALENDAR}_${weekStart}`;
-      
+
       // Actualizar optimistamente en caché
-      const updatedJobs = jobs.map(job => 
-        job.id === jobId ? { ...job, date: newDate } : job
-      );
+      const updatedJobs = jobs.map((job) => (job.id === jobId ? { ...job, date: newDate } : job));
       setJobs(updatedJobs);
-      
+
       // Sincronizar en segundo plano
-      await apiPut(
-        `/api/calendar/${jobId}`,
-        { date: newDate },
-        cacheKey,
-        () => {
-          // Actualizar caché después de sincronización exitosa
-          return { jobs: updatedJobs };
-        }
-      );
-      
+      await apiPut(`/api/calendar/${jobId}`, { date: newDate }, cacheKey, () => {
+        // Actualizar caché después de sincronización exitosa
+        return { jobs: updatedJobs };
+      });
+
       // Limpiar caché y forzar recarga desde el servidor
       if (localCache) {
         localCache.clear(cacheKey);
@@ -238,7 +243,7 @@ export default function CalendarTabNew() {
       console.error('Error updating date:', error);
       // Revertir cambio optimista
       await fetchJobs();
-      alert('Errore nell\'aggiornamento della data');
+      alert("Errore nell'aggiornamento della data");
     }
   };
 
@@ -248,20 +253,16 @@ export default function CalendarTabNew() {
     try {
       const weekStart = getWeekStart(currentWeek);
       const cacheKey = `${CACHE_KEYS.CALENDAR}_${weekStart}`;
-      
+
       // Actualizar optimistamente en caché
-      const updatedJobs = jobs.filter(job => job.id !== jobId);
+      const updatedJobs = jobs.filter((job) => job.id !== jobId);
       setJobs(updatedJobs);
-      
+
       // Sincronizar en segundo plano
-      await apiDelete(
-        `/api/calendar/${jobId}`,
-        cacheKey,
-        () => {
-          return { jobs: updatedJobs };
-        }
-      );
-      
+      await apiDelete(`/api/calendar/${jobId}`, cacheKey, () => {
+        return { jobs: updatedJobs };
+      });
+
       // Limpiar caché y forzar recarga desde el servidor
       if (localCache) {
         localCache.clear(cacheKey);
@@ -271,7 +272,7 @@ export default function CalendarTabNew() {
       console.error('Error deleting job:', error);
       // Revertir cambio optimista
       await fetchJobs();
-      alert('Errore nell\'eliminazione dell\'evento');
+      alert("Errore nell'eliminazione dell'evento");
     }
   };
 
@@ -294,7 +295,7 @@ export default function CalendarTabNew() {
     try {
       const weekStart = getWeekStart(new Date(formData.date));
       const cacheKey = `${CACHE_KEYS.CALENDAR}_${weekStart}`;
-      
+
       await apiPost(
         '/api/calendar',
         {
@@ -318,8 +319,8 @@ export default function CalendarTabNew() {
           // Agregar nuevo job al caché optimistamente
           const currentJobs = (current as { jobs?: Job[] })?.jobs || jobs;
           const responseData = response as { id?: string } | undefined;
-          const client = clients.find(c => c.id === formData.clientId);
-          const property = client?.properties.find(p => p.id === formData.propertyId);
+          const client = clients.find((c) => c.id === formData.clientId);
+          const property = client?.properties.find((p) => p.id === formData.propertyId);
           const newJob: Job = {
             id: responseData?.id || Date.now().toString(),
             date: formData.date,
@@ -349,11 +350,11 @@ export default function CalendarTabNew() {
             status: 'Pianificato',
             notes: '',
           };
-          
+
           return { jobs: [...currentJobs, newJob] };
-        }
+        },
       );
-      
+
       // Limpiar caché y forzar recarga desde el servidor
       if (localCache) {
         localCache.clear(cacheKey);
@@ -363,29 +364,32 @@ export default function CalendarTabNew() {
       setSelectedDate('');
     } catch (error) {
       console.error('Error creating job:', error);
-      alert('Errore nella creazione dell\'evento');
+      alert("Errore nella creazione dell'evento");
     }
   };
 
-  const handleEditJob = async (jobId: string, formData: {
-    date?: string;
-    startTime?: string;
-    endTime?: string;
-    propertyId?: string;
-    clientId?: string;
-    clientName?: string;
-    propertyName?: string;
-    cleaningType?: string;
-    resources?: Array<{ id: string; name: string }>;
-    isSpecialCase?: boolean;
-    checkInDate?: string;
-    checkInTime?: string;
-    checkOutDate?: string;
-    checkOutTime?: string;
-  }) => {
+  const handleEditJob = async (
+    jobId: string,
+    formData: {
+      date?: string;
+      startTime?: string;
+      endTime?: string;
+      propertyId?: string;
+      clientId?: string;
+      clientName?: string;
+      propertyName?: string;
+      cleaningType?: string;
+      resources?: Array<{ id: string; name: string }>;
+      isSpecialCase?: boolean;
+      checkInDate?: string;
+      checkInTime?: string;
+      checkOutDate?: string;
+      checkOutTime?: string;
+    },
+  ) => {
     try {
       const updateData: Record<string, string> = {};
-      
+
       if (formData.date) updateData.date = formData.date;
       if (formData.startTime) updateData.startTime = formData.startTime;
       if (formData.endTime) updateData.endTime = formData.endTime;
@@ -394,7 +398,7 @@ export default function CalendarTabNew() {
       if (formData.checkInTime !== undefined) updateData.checkInTime = formData.checkInTime;
       if (formData.checkOutDate !== undefined) updateData.checkOutDate = formData.checkOutDate;
       if (formData.checkOutTime !== undefined) updateData.checkOutTime = formData.checkOutTime;
-      
+
       // Manejar casos especiales vs casos normales
       if (formData.isSpecialCase) {
         updateData.isSpecialCase = 'true';
@@ -417,35 +421,35 @@ export default function CalendarTabNew() {
         });
       }
 
-      const weekStart = formData.date ? getWeekStart(new Date(formData.date)) : getWeekStart(currentWeek);
+      const weekStart = formData.date
+        ? getWeekStart(new Date(formData.date))
+        : getWeekStart(currentWeek);
       const cacheKey = `${CACHE_KEYS.CALENDAR}_${weekStart}`;
-      
+
       // Actualizar optimistamente en caché
-      const updatedJobs = jobs.map(job => {
+      const updatedJobs = jobs.map((job) => {
         if (job.id === jobId) {
           return {
             ...job,
             ...updateData,
-            propertyName: formData.propertyId 
-              ? clients.find(c => c.id === job.clientId)?.properties.find(p => p.id === formData.propertyId)?.location || job.propertyName
+            propertyName: formData.propertyId
+              ? clients
+                  .find((c) => c.id === job.clientId)
+                  ?.properties.find((p) => p.id === formData.propertyId)?.location ||
+                job.propertyName
               : job.propertyName,
           };
         }
         return job;
       });
       setJobs(updatedJobs);
-      
+
       // Sincronizar en segundo plano
-      await apiPut(
-        `/api/calendar/${jobId}`,
-        updateData,
-        cacheKey,
-        () => {
-          // Usar los jobs actualizados que ya calculamos
-          return { jobs: updatedJobs };
-        }
-      );
-      
+      await apiPut(`/api/calendar/${jobId}`, updateData, cacheKey, () => {
+        // Usar los jobs actualizados que ya calculamos
+        return { jobs: updatedJobs };
+      });
+
       // Limpiar caché y forzar recarga desde el servidor
       if (localCache) {
         localCache.clear(cacheKey);
@@ -457,7 +461,8 @@ export default function CalendarTabNew() {
       console.error('Error updating job:', error);
       // Revertir cambio optimista
       await fetchJobs();
-      const errorMessage = error instanceof Error ? error.message : 'Errore nell\'aggiornamento dell\'evento';
+      const errorMessage =
+        error instanceof Error ? error.message : "Errore nell'aggiornamento dell'evento";
       alert(errorMessage);
     }
   };
@@ -483,7 +488,10 @@ export default function CalendarTabNew() {
           <p className="text-sm text-gray-600 mt-1">
             {getMonthName(weekDays[0])} {weekDays[0].getFullYear()}
             {weekDays[0].getMonth() !== weekDays[6].getMonth() && (
-              <> - {getMonthName(weekDays[6])} {weekDays[6].getFullYear()}</>
+              <>
+                {' '}
+                - {getMonthName(weekDays[6])} {weekDays[6].getFullYear()}
+              </>
             )}
           </p>
         </div>
@@ -534,7 +542,10 @@ export default function CalendarTabNew() {
             const dayJobs = getJobsForDay(day);
             const dayStr = day.toISOString().split('T')[0];
             return (
-              <div key={dayIndex} className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative flex flex-col">
+              <div
+                key={dayIndex}
+                className="p-2 border-r last:border-r-0 border-b min-h-[200px] relative flex flex-col"
+              >
                 {/* Botón de agregar evento siempre visible arriba de todo */}
                 <button
                   onClick={() => {
@@ -547,19 +558,19 @@ export default function CalendarTabNew() {
                 >
                   + Aggiungi Evento
                 </button>
-                
+
                 {dayJobs.length === 0 ? (
-                  <div className="text-sm text-gray-400 text-center mt-2">
-                    Nessun lavoro
-                  </div>
+                  <div className="text-sm text-gray-400 text-center mt-2">Nessun lavoro</div>
                 ) : (
                   <div className="space-y-2 flex-1">
                     {dayJobs.map((job, jobIndex) => {
                       // Obtener clientId del job o buscarlo por nombre
-                      const jobClientId = job.clientId || clients.find(c => c.name === job.client)?.id || '';
+                      const jobClientId =
+                        job.clientId || clients.find((c) => c.name === job.client)?.id || '';
                       const clientColor = getClientColor(jobClientId, clients);
                       // Verificar si es caso especial (clientId = 'SPECIAL' o notes contiene 'Caso Speciale')
-                      const isSpecialCase = job.clientId === 'SPECIAL' || job.notes?.includes('Caso Speciale');
+                      const isSpecialCase =
+                        job.clientId === 'SPECIAL' || job.notes?.includes('Caso Speciale');
                       // Crear una key única combinando job.id con el índice y la fecha para evitar duplicados
                       const uniqueKey = `${job.id}-${job.date}-${jobIndex}`;
                       return (
@@ -595,7 +606,7 @@ export default function CalendarTabNew() {
                           </div>
 
                           <div className="font-semibold mb-1">{job.propertyName || 'Lavoro'}</div>
-                          
+
                           {job.client && (
                             <div className="text-xs text-gray-600 mb-1">Cliente: {job.client}</div>
                           )}
@@ -611,26 +622,46 @@ export default function CalendarTabNew() {
                             />
                           </div>
 
-                          {/* Check-in / Check-out - Aparece justo después de la fecha */}
-                          {(job.checkInDate || job.checkOutDate) && (
-                            <div className="text-xs text-gray-600 mb-1 space-y-0.5">
-                              {job.checkInDate && (
-                                <div>
-                                  <span className="font-medium">Check-in:</span>{' '}
-                                  {new Date(job.checkInDate).toLocaleDateString('it-IT')}
-                                  {job.checkInTime && ` alle ${formatTime(job.checkInTime)}`}
-                                </div>
-                              )}
-                              {job.checkOutDate && (
-                                <div>
-                                  <span className="font-medium">Check-out:</span>{' '}
-                                  {new Date(job.checkOutDate).toLocaleDateString('it-IT')}
-                                  {job.checkOutTime && ` alle ${formatTime(job.checkOutTime)}`}
-                                </div>
-                              )}
+                          {/* Check-in / Check-out - Siempre visible, muestra -- si está vacío o inválido */}
+                          <div className="text-xs text-gray-600 mb-1 space-y-0.5">
+                            <div>
+                              <span className="font-medium">Check-in:</span>{' '}
+                              {(() => {
+                                if (!job.checkInDate || job.checkInDate.trim() === '') {
+                                  return <span className="text-gray-400">--</span>;
+                                }
+                                const checkInDate = new Date(job.checkInDate);
+                                if (isNaN(checkInDate.getTime())) {
+                                  return <span className="text-gray-400">--</span>;
+                                }
+                                return (
+                                  <>
+                                    {checkInDate.toLocaleDateString('it-IT')}
+                                    {job.checkInTime && ` alle ${formatTime(job.checkInTime)}`}
+                                  </>
+                                );
+                              })()}
                             </div>
-                          )}
-                          
+                            <div>
+                              <span className="font-medium">Check-out:</span>{' '}
+                              {(() => {
+                                if (!job.checkOutDate || job.checkOutDate.trim() === '') {
+                                  return <span className="text-gray-400">--</span>;
+                                }
+                                const checkOutDate = new Date(job.checkOutDate);
+                                if (isNaN(checkOutDate.getTime())) {
+                                  return <span className="text-gray-400">--</span>;
+                                }
+                                return (
+                                  <>
+                                    {checkOutDate.toLocaleDateString('it-IT')}
+                                    {job.checkOutTime && ` alle ${formatTime(job.checkOutTime)}`}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
                           {job.cleaningType && (
                             <div className="text-xs font-medium text-gray-700 mb-1">
                               {job.cleaningType === 'Profonda' ? '🧹 Profonda' : '✨ Repasso'}
@@ -638,16 +669,22 @@ export default function CalendarTabNew() {
                           )}
 
                           <div className="text-gray-600 mb-2">
-                            <span className="text-xs font-medium">Inizio:</span> {formatTime(job.startTime)}
+                            <span className="text-xs font-medium">Inizio:</span>{' '}
+                            {formatTime(job.startTime)}
                             {' | '}
-                            <span className="text-xs font-medium">Fine:</span> {formatTime(job.endTime)}
+                            <span className="text-xs font-medium">Fine:</span>{' '}
+                            {formatTime(job.endTime)}
                           </div>
 
                           <div className="mt-2 pt-2 border-t border-gray-300">
-                            <div className="text-xs font-medium text-gray-700 mb-1">Dipendenti:</div>
+                            <div className="text-xs font-medium text-gray-700 mb-1">
+                              Dipendenti:
+                            </div>
                             <div className="space-y-1">
                               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((num) => {
-                                const resourceName = job[`resource${num}Name` as keyof Job] as string;
+                                const resourceName = job[
+                                  `resource${num}Name` as keyof Job
+                                ] as string;
                                 if (!resourceName) return null;
                                 return (
                                   <div key={num} className="text-xs text-gray-600">
@@ -684,10 +721,7 @@ export default function CalendarTabNew() {
             setEditingJob(null);
             setSelectedDate('');
           }}
-          onSubmit={editingJob 
-            ? (data) => handleEditJob(editingJob.id, data)
-            : handleCreateJob
-          }
+          onSubmit={editingJob ? (data) => handleEditJob(editingJob.id, data) : handleCreateJob}
         />
       )}
     </div>
@@ -746,7 +780,7 @@ function EventModal({
   useEffect(() => {
     if (initialDate && !job) {
       // Solo actualizar si no estamos editando un job existente
-      setFormData(prev => ({ ...prev, date: initialDate }));
+      setFormData((prev) => ({ ...prev, date: initialDate }));
     }
   }, [initialDate, job]);
 
@@ -754,23 +788,45 @@ function EventModal({
     if (job) {
       // Verificar si es caso especial
       const isSpecial = job.clientId === 'SPECIAL' || job.notes?.includes('Caso Speciale');
-      
+
+      // Validar y limpiar check-in/check-out inválidos
+      const validateDate = (dateStr: string | undefined): string => {
+        if (!dateStr || dateStr.trim() === '') return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+        return dateStr;
+      };
+
       if (isSpecial) {
         // Es caso especial: usar nombres directamente
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           isSpecialCase: true,
           clientName: job.client || '',
           propertyName: job.propertyName || '',
           clientId: '',
           propertyId: '',
+          checkInDate: validateDate(job.checkInDate),
+          checkOutDate: validateDate(job.checkOutDate),
         }));
       } else if (job.client && clients.length > 0) {
         // Caso normal: buscar cliente en la lista
-        const client = clients.find(c => c.name === job.client);
+        const client = clients.find((c) => c.name === job.client);
         if (client) {
-          setFormData(prev => ({ ...prev, clientId: client.id }));
+          setFormData((prev) => ({
+            ...prev,
+            clientId: client.id,
+            checkInDate: validateDate(job.checkInDate),
+            checkOutDate: validateDate(job.checkOutDate),
+          }));
         }
+      } else {
+        // Limpiar check-in/check-out inválidos incluso si no hay cliente
+        setFormData((prev) => ({
+          ...prev,
+          checkInDate: validateDate(job.checkInDate),
+          checkOutDate: validateDate(job.checkOutDate),
+        }));
       }
     }
   }, [job, clients]);
@@ -785,12 +841,12 @@ function EventModal({
           jobResources.push({ id: resourceId, name: resourceName });
         }
       }
-      setFormData(prev => ({ 
-        ...prev, 
-        selectedResources: jobResources.length > 0 ? jobResources : [{ id: '', name: '' }]
+      setFormData((prev) => ({
+        ...prev,
+        selectedResources: jobResources.length > 0 ? jobResources : [{ id: '', name: '' }],
       }));
     } else {
-      setFormData(prev => {
+      setFormData((prev) => {
         if (prev.selectedResources.length === 0) {
           return { ...prev, selectedResources: [{ id: '', name: '' }] };
         }
@@ -799,20 +855,19 @@ function EventModal({
     }
   }, [job]);
 
-
-  const selectedClient = clients.find(c => c.id === formData.clientId);
+  const selectedClient = clients.find((c) => c.id === formData.clientId);
   const availableProperties = selectedClient?.properties || [];
 
   const getAvailableResourcesForIndex = (index: number) => {
     const selectedResourceIds = formData.selectedResources
-      .map((r, i) => i !== index ? r.id : '')
+      .map((r, i) => (i !== index ? r.id : ''))
       .filter(Boolean);
-    return resources.filter(r => !selectedResourceIds.includes(r.id));
+    return resources.filter((r) => !selectedResourceIds.includes(r.id));
   };
 
   const handleAddResource = () => {
     if (formData.selectedResources.length < 11) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         selectedResources: [...prev.selectedResources, { id: '', name: '' }],
       }));
@@ -820,20 +875,20 @@ function EventModal({
   };
 
   const handleResourceChange = (index: number, resourceId: string) => {
-    const resource = resources.find(r => r.id === resourceId);
+    const resource = resources.find((r) => r.id === resourceId);
     if (resource) {
       const fullName = `${resource.name} ${resource.surname}`.trim();
       const updated = [...formData.selectedResources];
       updated[index] = { id: resourceId, name: fullName };
-      setFormData(prev => ({ ...prev, selectedResources: updated }));
+      setFormData((prev) => ({ ...prev, selectedResources: updated }));
     }
   };
 
   const handleRemoveResource = (index: number) => {
     const updated = formData.selectedResources.filter((_, i) => i !== index);
-    setFormData(prev => ({ 
-      ...prev, 
-      selectedResources: updated.length > 0 ? updated : [{ id: '', name: '' }]
+    setFormData((prev) => ({
+      ...prev,
+      selectedResources: updated.length > 0 ? updated : [{ id: '', name: '' }],
     }));
   };
 
@@ -843,7 +898,7 @@ function EventModal({
       alert('Per favore, compila la data');
       return;
     }
-    
+
     if (formData.isSpecialCase) {
       // Para casos especiales, cliente y propiedad son texto libre
       if (!formData.clientName || !formData.propertyName) {
@@ -857,34 +912,27 @@ function EventModal({
         return;
       }
     }
-    
+
     onSubmit({
       ...formData,
-      resources: formData.selectedResources.filter(r => r.id),
+      resources: formData.selectedResources.filter((r) => r.id),
     });
   };
 
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 flex items-center justify-center z-50" onClick={onClose}>
       {/* Backdrop con blur */}
       <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" />
-      
+
       {/* Modal */}
-      <div 
+      <div
         className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold mb-4">
-          {job ? 'Modifica Evento' : 'Nuovo Evento'}
-        </h3>
+        <h3 className="text-lg font-semibold mb-4">{job ? 'Modifica Evento' : 'Nuovo Evento'}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Data *</label>
             <input
               type="date"
               value={formData.date}
@@ -894,11 +942,58 @@ function EventModal({
             />
           </div>
 
+          {/* Check-in y Check-out - Justo después de la fecha */}
+          <div className="border-t pt-3 mt-3">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+              Check-in / Check-out (opzionale)
+            </h4>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={formData.checkInDate}
+                    onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Data check-in"
+                  />
+                  <input
+                    type="time"
+                    value={formData.checkInTime}
+                    onChange={(e) => setFormData({ ...formData, checkInTime: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Ora check-in"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={formData.checkOutDate}
+                    onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Data check-out"
+                  />
+                  <input
+                    type="time"
+                    value={formData.checkOutTime}
+                    onChange={(e) => setFormData({ ...formData, checkOutTime: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Ora check-out"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ora Inizio
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ora Inizio</label>
               <input
                 type="time"
                 value={formData.startTime}
@@ -907,9 +1002,7 @@ function EventModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ora Fine
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ora Fine</label>
               <input
                 type="time"
                 value={formData.endTime}
@@ -925,14 +1018,16 @@ function EventModal({
               type="checkbox"
               id="isSpecialCase"
               checked={formData.isSpecialCase}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                isSpecialCase: e.target.checked,
-                clientId: e.target.checked ? '' : formData.clientId,
-                propertyId: e.target.checked ? '' : formData.propertyId,
-                clientName: e.target.checked ? formData.clientName : '',
-                propertyName: e.target.checked ? formData.propertyName : '',
-              })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  isSpecialCase: e.target.checked,
+                  clientId: e.target.checked ? '' : formData.clientId,
+                  propertyId: e.target.checked ? '' : formData.propertyId,
+                  clientName: e.target.checked ? formData.clientName : '',
+                  propertyName: e.target.checked ? formData.propertyName : '',
+                })
+              }
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="isSpecialCase" className="ml-2 block text-sm text-gray-700">
@@ -975,12 +1070,12 @@ function EventModal({
             <>
               {/* Campos normales con dropdown */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cliente *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
                 <select
                   value={formData.clientId}
-                  onChange={(e) => setFormData({ ...formData, clientId: e.target.value, propertyId: '' })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, clientId: e.target.value, propertyId: '' })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   required
                 >
@@ -994,9 +1089,7 @@ function EventModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Proprietà *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Proprietà *</label>
                 <select
                   value={formData.propertyId}
                   onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
@@ -1016,9 +1109,7 @@ function EventModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo di Pulizia
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo di Pulizia</label>
             <select
               value={formData.cleaningType}
               onChange={(e) => setFormData({ ...formData, cleaningType: e.target.value })}
@@ -1031,9 +1122,7 @@ function EventModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dipendenti
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dipendenti</label>
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
               {formData.selectedResources.map((resource, index) => {
                 const availableForThisIndex = getAvailableResourcesForIndex(index);
@@ -1051,10 +1140,8 @@ function EventModal({
                           {r.name} {r.surname}
                         </option>
                       ))}
-                      {resource.id && !availableForThisIndex.find(r => r.id === resource.id) && (
-                        <option value={resource.id}>
-                          {resource.name}
-                        </option>
+                      {resource.id && !availableForThisIndex.find((r) => r.id === resource.id) && (
+                        <option value={resource.id}>{resource.name}</option>
                       )}
                     </select>
                     <button
@@ -1080,57 +1167,6 @@ function EventModal({
             </div>
           </div>
 
-          {/* Check-in y Check-out */}
-          <div className="border-t pt-4 mt-4">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Check-in / Check-out (opzionale)</h4>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Check-in
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="date"
-                    value={formData.checkInDate}
-                    onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Data check-in"
-                  />
-                  <input
-                    type="time"
-                    value={formData.checkInTime}
-                    onChange={(e) => setFormData({ ...formData, checkInTime: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Ora check-in"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Check-out
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="date"
-                    value={formData.checkOutDate}
-                    onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Data check-out"
-                  />
-                  <input
-                    type="time"
-                    value={formData.checkOutTime}
-                    onChange={(e) => setFormData({ ...formData, checkOutTime: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Ora check-out"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
@@ -1151,4 +1187,3 @@ function EventModal({
     </div>
   );
 }
-

@@ -26,9 +26,11 @@ async function findCervinoEverywhere() {
     propertiesRows.forEach((row, index) => {
       const clientName = row[2] || ''; // Nome Cliente
       const location = row[4] || ''; // Location
-      if (clientName.toLowerCase().includes('cervino') || 
-          clientName.toLowerCase().includes('il cervino') ||
-          location.toLowerCase().includes('cervino')) {
+      if (
+        clientName.toLowerCase().includes('cervino') ||
+        clientName.toLowerCase().includes('il cervino') ||
+        location.toLowerCase().includes('cervino')
+      ) {
         console.log(`   ⭐ Fila ${index + 2}: Cliente="${clientName}", Location="${location}"`);
       }
     });
@@ -40,10 +42,14 @@ async function findCervinoEverywhere() {
     calendarRows.forEach((row, index) => {
       const clientName = row[9] || ''; // Cliente
       const propertyName = row[8] || ''; // Nome Proprietà
-      if (clientName.toLowerCase().includes('cervino') || 
-          clientName.toLowerCase().includes('il cervino') ||
-          propertyName.toLowerCase().includes('cervino')) {
-        console.log(`   ⭐ Fila ${index + 2}: Cliente="${clientName}", Proprietà="${propertyName}"`);
+      if (
+        clientName.toLowerCase().includes('cervino') ||
+        clientName.toLowerCase().includes('il cervino') ||
+        propertyName.toLowerCase().includes('cervino')
+      ) {
+        console.log(
+          `   ⭐ Fila ${index + 2}: Cliente="${clientName}", Proprietà="${propertyName}"`,
+        );
       }
     });
 
@@ -55,4 +61,3 @@ async function findCervinoEverywhere() {
 }
 
 findCervinoEverywhere();
-

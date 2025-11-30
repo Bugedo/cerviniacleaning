@@ -1,4 +1,8 @@
-import { getSpreadsheetData, updateSpreadsheetData, getGoogleSheetsClient } from '../lib/googleSheets';
+import {
+  getSpreadsheetData,
+  updateSpreadsheetData,
+  getGoogleSheetsClient,
+} from '../lib/googleSheets';
 import { getSheetsConfig } from '../lib/sheetsConfig';
 
 async function migrateCalendarClientId() {
@@ -17,7 +21,7 @@ async function migrateCalendarClientId() {
     const clientsData = await getSpreadsheetData(config.sheets.clients, 'Clienti!A:Z');
     const clientsRows = clientsData.slice(1);
     const clientsMap = new Map<string, string>();
-    clientsRows.forEach(row => {
+    clientsRows.forEach((row) => {
       if (row[0] && row[1]) {
         clientsMap.set(row[1], row[0]); // nombre -> id
       }
@@ -26,7 +30,7 @@ async function migrateCalendarClientId() {
     const propertiesData = await getSpreadsheetData(config.sheets.clients, 'Proprietà!A:Z');
     const propertiesRows = propertiesData.slice(1);
     const propertiesMap = new Map<string, string>();
-    propertiesRows.forEach(row => {
+    propertiesRows.forEach((row) => {
       if (row[0] && row[1]) {
         propertiesMap.set(row[0], row[1]); // propertyId -> clientId
       }
@@ -73,7 +77,7 @@ async function migrateCalendarClientId() {
       if (clientId && currentClientId !== clientId) {
         const rowIndex = i + 2; // +2 porque empieza en 1 y hay header
         const range = `Calendario!K${rowIndex}`;
-        
+
         await sheets.spreadsheets.values.update({
           spreadsheetId: calendarSheetId,
           range,
@@ -96,4 +100,3 @@ async function migrateCalendarClientId() {
 }
 
 migrateCalendarClientId();
-

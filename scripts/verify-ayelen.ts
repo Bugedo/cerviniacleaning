@@ -34,7 +34,9 @@ async function verifyAyelen() {
     const calendarData = await getSpreadsheetData(config.sheets.calendar, 'Calendario!A:AG');
     const calendarRows = calendarData.slice(1);
 
-    const nov21Events = calendarRows.filter((row) => row[1] === '2025-11-21' && row[5] === 'Lavoro');
+    const nov21Events = calendarRows.filter(
+      (row) => row[1] === '2025-11-21' && row[5] === 'Lavoro',
+    );
 
     console.log(`📅 Eventos del 21 de noviembre: ${nov21Events.length}\n`);
 
@@ -42,7 +44,7 @@ async function verifyAyelen() {
       console.log(`   Evento ${index + 1} (ID: ${event[0]}):`);
       console.log(`      Propiedad: ${event[8]}`);
       console.log(`      Hora: ${event[3]} - ${event[4]}`);
-      
+
       // Verificar si Ayelen está asignada
       for (let i = 1; i <= 11; i++) {
         const idIndex = 10 + (i - 1) * 2 + 1;
@@ -55,7 +57,9 @@ async function verifyAyelen() {
       console.log('');
     });
 
-    console.log('✅ Verificación completada. El nombre "Ayelen Baronetto" está correcto en la base de datos.');
+    console.log(
+      '✅ Verificación completada. El nombre "Ayelen Baronetto" está correcto en la base de datos.',
+    );
   } catch (error) {
     console.error('❌ Error:', error);
     throw error;
@@ -63,4 +67,3 @@ async function verifyAyelen() {
 }
 
 verifyAyelen();
-

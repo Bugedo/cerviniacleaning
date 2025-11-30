@@ -49,22 +49,26 @@ async function debugAylenResources() {
     console.log(`   Hora: ${event[3]} - ${event[4]}\n`);
 
     console.log(`🔍 Verificando recursos en el evento:\n`);
-    
+
     // Verificar recursos 1-11 con los mismos índices que usa la API
     for (let i = 1; i <= 11; i++) {
       const idIndex = 10 + (i - 1) * 2 + 1; // 11, 13, 15, etc.
       const nameIndex = 10 + (i - 1) * 2 + 2; // 12, 14, 16, etc.
-      
+
       const resourceId = event[idIndex] || '';
       const resourceName = event[nameIndex] || '';
-      
+
       console.log(`   resource${i}:`);
       console.log(`      Índice ID: ${idIndex} (columna ${String.fromCharCode(65 + idIndex)})`);
-      console.log(`      Índice Name: ${nameIndex} (columna ${String.fromCharCode(65 + nameIndex)})`);
+      console.log(
+        `      Índice Name: ${nameIndex} (columna ${String.fromCharCode(65 + nameIndex)})`,
+      );
       console.log(`      ID encontrado: "${resourceId}"`);
       console.log(`      Nombre encontrado: "${resourceName}"`);
-      console.log(`      ¿Coincide con Aylen ID (${aylenId})? ${resourceId === aylenId ? '✅ SÍ' : '❌ NO'}`);
-      
+      console.log(
+        `      ¿Coincide con Aylen ID (${aylenId})? ${resourceId === aylenId ? '✅ SÍ' : '❌ NO'}`,
+      );
+
       if (resourceId === aylenId) {
         console.log(`      ⭐ ¡ESTE ES AYLEN EN POSICIÓN ${i}!\n`);
       } else if (resourceId) {
@@ -76,7 +80,7 @@ async function debugAylenResources() {
 
     // Simular la lógica de la API
     console.log(`\n🧪 Simulando lógica de la API:\n`);
-    
+
     const job = {
       id: event[0] || '',
       date: event[1] || '',
@@ -97,7 +101,7 @@ async function debugAylenResources() {
     console.log(`   Job mapeado:`);
     console.log(`      resource1Id: "${(job as Record<string, string>).resource1Id}"`);
     console.log(`      resource1Name: "${(job as Record<string, string>).resource1Name}"`);
-    
+
     // Verificar si Aylen está en el job
     let isInJob = false;
     for (let i = 1; i <= 11; i++) {
@@ -133,4 +137,3 @@ async function debugAylenResources() {
 }
 
 debugAylenResources();
-
