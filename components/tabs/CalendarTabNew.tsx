@@ -610,6 +610,26 @@ export default function CalendarTabNew() {
                               title="Clicca per cambiare data"
                             />
                           </div>
+
+                          {/* Check-in / Check-out - Aparece justo después de la fecha */}
+                          {(job.checkInDate || job.checkOutDate) && (
+                            <div className="text-xs text-gray-600 mb-1 space-y-0.5">
+                              {job.checkInDate && (
+                                <div>
+                                  <span className="font-medium">Check-in:</span>{' '}
+                                  {new Date(job.checkInDate).toLocaleDateString('it-IT')}
+                                  {job.checkInTime && ` alle ${formatTime(job.checkInTime)}`}
+                                </div>
+                              )}
+                              {job.checkOutDate && (
+                                <div>
+                                  <span className="font-medium">Check-out:</span>{' '}
+                                  {new Date(job.checkOutDate).toLocaleDateString('it-IT')}
+                                  {job.checkOutTime && ` alle ${formatTime(job.checkOutTime)}`}
+                                </div>
+                              )}
+                            </div>
+                          )}
                           
                           {job.cleaningType && (
                             <div className="text-xs font-medium text-gray-700 mb-1">
@@ -642,27 +662,6 @@ export default function CalendarTabNew() {
                               </div>
                             )}
                           </div>
-
-                          {/* Check-in / Check-out */}
-                          {(job.checkInDate || job.checkOutDate) && (
-                            <div className="mt-2 pt-2 border-t border-gray-300">
-                              <div className="text-xs font-medium text-gray-700 mb-1">Check-in / Check-out:</div>
-                              {job.checkInDate && (
-                                <div className="text-xs text-gray-600">
-                                  <span className="font-medium">Check-in:</span>{' '}
-                                  {new Date(job.checkInDate).toLocaleDateString('it-IT')}
-                                  {job.checkInTime && ` alle ${formatTime(job.checkInTime)}`}
-                                </div>
-                              )}
-                              {job.checkOutDate && (
-                                <div className="text-xs text-gray-600">
-                                  <span className="font-medium">Check-out:</span>{' '}
-                                  {new Date(job.checkOutDate).toLocaleDateString('it-IT')}
-                                  {job.checkOutTime && ` alle ${formatTime(job.checkOutTime)}`}
-                                </div>
-                              )}
-                            </div>
-                          )}
                         </div>
                       );
                     })}
